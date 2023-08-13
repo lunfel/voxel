@@ -7,18 +7,31 @@ use bevy::{prelude::*, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPl
 use rand::Rng;
 use systems::player::player_control::PlayerPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_rapier3d::prelude::*;
 
 fn main() {
     App::new()
         .init_resource::<WorldSettings>()
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(PlayerPlugin)
         .add_systems(Startup, setup)
+        .add_systems(Startup, setup_physics)
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(WorldInspectorPlugin::new())
         .run();
 } 
+
+fn setup_physics(mut commands: Commands) {
+    /* Create the bouncing ball. */
+    commands
+        .spawn(RigidBody::Dynamic)
+        .insert(Collider::ball(0.5))
+        .insert(Restitution::coefficient(0.7))
+        .insert(TransformBundle::from(Transform::from_xyz(16.0, 20.0, 16.0)));
+}
 
 #[derive(Resource)]
 pub struct WorldSettings {
@@ -30,7 +43,7 @@ pub struct WorldSettings {
 impl Default for WorldSettings {
     fn default() -> Self {
         Self {
-            chunk_size: 256,
+            chunk_size: 32,
             light_distance: 24,
             unique_blocks: 4
         }
@@ -63,26 +76,21 @@ fn setup(
         for y in 0..=chunk_size {
             for z in 0..=chunk_size {
                 if y == 3 {
-                    let height = rng.gen_range(0..3);
+                    // let height = rng.gen_range(0..3);
                     let material_index = rng.gen_range(0..world_settings.unique_blocks);
 
-                    commands.spawn(PbrBundle {
+                    commands.spawn((PbrBundle {
                         mesh: mesh_handle.clone(),
                         material: materials_handles.get(material_index).expect("Material does not exist").clone(),
-                        transform: Transform::from_xyz(x as f32, height as f32, z as f32),
+                        transform: Transform::from_xyz(x as f32, y as f32, z as f32),
                         ..default()
-                    });
+                    },
+                        Collider::cuboid(0.5, 0.5, 0.5)
+                    ));
                 }
             }
         }
     }
-
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane::from_size(chunk_size as f32))),
-        material: materials.add(Color::rgb(0.1, 0.8, 0.1).into()),
-        transform: Transform::from_xyz(chunk_size as f32 / 2.0 - 0.5, -0.5, chunk_size as f32 / 2.0 - 0.5),
-        ..default()
-    });
 
     commands.insert_resource(AmbientLight {
         brightness: 0.15,

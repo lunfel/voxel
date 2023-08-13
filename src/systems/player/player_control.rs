@@ -1,4 +1,5 @@
 use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader};
+use bevy_rapier3d::prelude::{RigidBody, Collider, KinematicCharacterController, Velocity};
 
 use crate::WorldSettings;
 
@@ -17,7 +18,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.00012,
-            speed: 12.0
+            speed: 6.0
         }
     }
 }
@@ -55,11 +56,18 @@ pub fn setup_player(
     commands.spawn((
         PlayerControl,
         Camera3dBundle {
-            transform: Transform::from_xyz(-5.0, 15.0, -5.0).looking_at(Vec3 {
+            transform: Transform::from_xyz(5.0, 15.0, 5.0).looking_at(Vec3 {
                 z: world_settings.chunk_size as f32 / 2.0,
                 x: world_settings.chunk_size as f32 / 2.0,
                 ..default()
             }, Vec3::Y),
+            ..default()
+        },
+        RigidBody::KinematicPositionBased,
+        Collider::cuboid(0.5, 1.65, 0.5),
+        KinematicCharacterController::default(),
+        Velocity {
+            linvel: Vec3::new(0.0, 0.0, 9.8),
             ..default()
         }
     ));
@@ -71,10 +79,10 @@ pub fn player_move(
     primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<MovementSettings>,
     key_bindings: Res<KeyBindings>,
-    mut query: Query<&mut Transform, With<PlayerControl>>
+    mut query: Query<(&mut Transform, &mut KinematicCharacterController), With<PlayerControl>>
 ) {
     if let Ok(window) = primary_window.get_single() {
-        for mut transform in query.iter_mut() {
+        for (mut transform, mut character_controller) in query.iter_mut() {
             let mut velocity = Vec3::ZERO;
             let local_z = transform.local_z();
             let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
@@ -102,6 +110,10 @@ pub fn player_move(
             velocity = velocity.normalize_or_zero();
 
             transform.translation += velocity * time.delta_seconds() * settings.speed;
+            character_controller.translation  = Some(Vec3 {
+                y: -0.1,
+                ..default()
+            });
         }
     }
 }
