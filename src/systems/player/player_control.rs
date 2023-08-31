@@ -14,10 +14,10 @@ pub struct MovementSettings {
     pub speed: f32
 }
 
-#[derive(Resource)]
-pub struct PlayerState {
-    pub is_jumping: bool
-}
+// #[derive(Resource)]
+// pub struct PlayerState {
+//     pub is_jumping: bool
+// }
 
 impl Default for MovementSettings {
     fn default() -> Self {
@@ -82,7 +82,7 @@ pub fn player_move(
     primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<MovementSettings>,
     key_bindings: Res<KeyBindings>,
-    mut player_state: ResMut<PlayerState>,
+    // player_state: ResMut<PlayerState>,
     mut query: Query<(&mut Transform, &mut KinematicCharacterController, &KinematicCharacterControllerOutput, &mut Velocity), With<PlayerControl>>
 ) {
     if let Ok(window) = primary_window.get_single() {
@@ -91,7 +91,7 @@ pub fn player_move(
             let local_z = transform.local_z();
             let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
             let right = Vec3::new(local_z.z, 0.0, -local_z.x);
-            let up = Vec3::new(0.0, 100.0, 0.0);
+            // let up = Vec3::new(0.0, 1000.0, 0.0);
 
             for key in keys.get_pressed() {
                match window.cursor.grab_mode {
@@ -107,9 +107,6 @@ pub fn player_move(
                             velocity -= right;
                         } else if key == key_bindings.move_right {
                             velocity += right;
-                        } else if key == key_bindings.jump {
-                            velocity += up;
-                            player_state.is_jumping = true;
                         } 
                     }
                 } 
