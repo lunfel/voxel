@@ -29,14 +29,13 @@ fn setup_physics(mut commands: Commands) {
     commands
         .spawn(RigidBody::Dynamic)
         .insert(Collider::ball(0.5))
-        .insert(Restitution::coefficient(0.7))
+        .insert(Restitution::coefficient(0.1))
         .insert(TransformBundle::from(Transform::from_xyz(16.0, 20.0, 16.0)));
 }
 
 #[derive(Resource)]
 pub struct WorldSettings {
     chunk_size: u32,
-    light_distance: u32,
     unique_blocks: usize 
 }
 
@@ -44,7 +43,6 @@ impl Default for WorldSettings {
     fn default() -> Self {
         Self {
             chunk_size: 32,
-            light_distance: 24,
             unique_blocks: 4
         }
     }
@@ -57,7 +55,6 @@ fn setup(
     world_settings: Res<WorldSettings>
 ) {
     let chunk_size = world_settings.chunk_size;
-    let light_distance = world_settings.light_distance;
     let color_range = 0.0..1.0;
     let mut rng = rand::thread_rng();
 

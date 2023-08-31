@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader};
-use bevy_rapier3d::prelude::{RigidBody, Collider, KinematicCharacterController, Velocity};
+use bevy_rapier3d::{prelude::{RigidBody, Collider, KinematicCharacterController, Velocity, KinematicCharacterControllerOutput}, na::clamp};
 
 use crate::WorldSettings;
 
@@ -12,6 +12,11 @@ pub struct InputState {
 pub struct MovementSettings {
     pub sensitivity: f32,
     pub speed: f32
+}
+
+#[derive(Resource)]
+pub struct PlayerState {
+    pub is_jumping: bool
 }
 
 impl Default for MovementSettings {
@@ -66,10 +71,8 @@ pub fn setup_player(
         RigidBody::KinematicPositionBased,
         Collider::cuboid(0.5, 1.65, 0.5),
         KinematicCharacterController::default(),
-        Velocity {
-            linvel: Vec3::new(0.0, 0.0, 9.8),
-            ..default()
-        }
+        KinematicCharacterControllerOutput::default(),
+        Velocity::default()
     ));
 }
 
@@ -79,14 +82,16 @@ pub fn player_move(
     primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<MovementSettings>,
     key_bindings: Res<KeyBindings>,
-    mut query: Query<(&mut Transform, &mut KinematicCharacterController), With<PlayerControl>>
+    mut player_state: ResMut<PlayerState>,
+    mut query: Query<(&mut Transform, &mut KinematicCharacterController, &KinematicCharacterControllerOutput, &mut Velocity), With<PlayerControl>>
 ) {
     if let Ok(window) = primary_window.get_single() {
-        for (mut transform, mut character_controller) in query.iter_mut() {
+        for (mut transform, mut character_controller, character_output, mut falling_velocity) in query.iter_mut() {
             let mut velocity = Vec3::ZERO;
             let local_z = transform.local_z();
             let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
             let right = Vec3::new(local_z.z, 0.0, -local_z.x);
+            let up = Vec3::new(0.0, 100.0, 0.0);
 
             for key in keys.get_pressed() {
                match window.cursor.grab_mode {
@@ -102,6 +107,9 @@ pub fn player_move(
                             velocity -= right;
                         } else if key == key_bindings.move_right {
                             velocity += right;
+                        } else if key == key_bindings.jump {
+                            velocity += up;
+                            player_state.is_jumping = true;
                         } 
                     }
                 } 
@@ -109,11 +117,19 @@ pub fn player_move(
 
             velocity = velocity.normalize_or_zero();
 
+            let gravity_force = -0.981;
+
+            if character_output.grounded {
+                falling_velocity.linvel = Vec3::ZERO;
+            } else {
+                falling_velocity.linvel = Vec3 {
+                    y: clamp(falling_velocity.linvel.y + gravity_force * time.delta_seconds(), -15.0, 0.0),
+                    ..default()
+                };
+            }
+
             transform.translation += velocity * time.delta_seconds() * settings.speed;
-            character_controller.translation  = Some(Vec3 {
-                y: -0.1,
-                ..default()
-            });
+            character_controller.translation = Some(falling_velocity.linvel * time.delta_seconds());
         }
     }
 }
