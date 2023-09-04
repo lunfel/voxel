@@ -82,8 +82,11 @@ fn setup(
                         transform: Transform::from_xyz(x as f32, y as f32, z as f32),
                         ..default()
                     },
-                        Collider::cuboid(0.5, 0.5, 0.5)
-                    ));
+                        Collider::cuboid(0.5, 0.5, 0.5),
+                        Friction {
+                            coefficient: 0.0,
+                            combine_rule: CoefficientCombineRule::Min
+                        }));
                 }
             }
         }

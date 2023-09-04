@@ -1,6 +1,6 @@
 use std::ops::{DerefMut, Deref};
 
-use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader, time::Stopwatch};
+use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader, time::Stopwatch, core::Zeroable, app::AppExit};
 use bevy_rapier3d::{prelude::{RigidBody, Collider, KinematicCharacterController, KinematicCharacterControllerOutput, CharacterLength}, na::{default_allocator, ClosedAdd, clamp}};
 
 use crate::WorldSettings;
@@ -37,7 +37,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.00012,
-            speed: 6.0
+            speed: 5.0
         }
     }
 }
@@ -179,50 +179,22 @@ pub fn player_move(
                     }
                 }
             }
-           
-            // let jump_timer: &mut Option<Timer> = &mut**jump_timer;
-            // jump_timer.as_mut().map(|timer| timer.tick(time.delta()));
-            //
-            // if let Some(timer) = jump_timer {
-            //     if !timer.finished() {
-            //         move_velocity.y = jump_vel;
-            //     } else {
-            //         jump_timer.take();
-            //     }
-            // }
 
-            let t = player_state.time_grounded_changed.elapsed_secs();
-            let a = -0.981;
-            let v0 = if player_state.is_jumping {
-                1.0
+            let mut v0_y = player_state.last_velocity * Vec3::Y;
+
+            let final_vel = move_velocity + if just_started_jumping {
+                // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
+                Vec3::new(0.0, jump_vel, 0.0)
             } else {
-                0.0
+                let grav = Vec3::new(0.0, -9.81, 0.0);
+                let delta = time.delta_seconds();
+                info!("Y vel: {} + {} * {}", v0_y, grav, delta);
+                v0_y + grav * delta
             };
 
-            let v = v0 + a * t;
+            player_state.last_velocity = final_vel;
 
-            let falling_velocity = match (&player_state.grounded_state, &just_started_jumping) {
-                (PlayerGroundedEnum::NonGrounded, _) => Vec3::new(0.0, clamp(
-                    v,
-                    -terminal_falling_velocity,
-                    terminal_falling_velocity
-                ), 0.0),
-                (PlayerGroundedEnum::Grounded, false) => Vec3::new(0.0, -0.001, 0.0),
-                (PlayerGroundedEnum::Grounded, true) => Vec3::new(0.0, jump_vel, 0.0),
-            };
-
-            let mut final_velocity = move_velocity * time.delta_seconds() + falling_velocity;
-
-            info!("falling debug: vel-y={:.4} t={:.4} g={}",
-                final_velocity.y,
-                t,
-                character_output.grounded
-            );
-
-            
-            character_controller.translation = Some(final_velocity);
-
-            // player_state.last_velocity = character_output.effective_translation / time.delta_seconds();
+            character_controller.translation = Some(final_vel * time.delta_seconds());
         }
     }
 }
@@ -281,11 +253,13 @@ pub fn toggle_grab_cursor(window: &mut Window) {
 fn cursor_grab(
     keys: Res<Input<KeyCode>>,
     key_bindings: Res<KeyBindings>,
+    mut app_exit_events: ResMut<Events<AppExit>>,
     mut primary_window: Query<&mut Window, With<PrimaryWindow>>
 ) {
     if let Ok(mut window) = primary_window.get_single_mut() {
         if keys.just_pressed(key_bindings.toggle_grab_cursor) {
-            toggle_grab_cursor(&mut window);
+            // toggle_grab_cursor(&mut window);
+            app_exit_events.send(AppExit);
         }
     } else {
         warn!("Primary window not found for `cursor_grab`");
