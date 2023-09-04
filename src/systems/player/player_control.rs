@@ -1,5 +1,7 @@
-use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader};
-use bevy_rapier3d::{prelude::{RigidBody, Collider, KinematicCharacterController, Velocity, KinematicCharacterControllerOutput}, na::clamp};
+use std::ops::{DerefMut, Deref};
+
+use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader, time::Stopwatch};
+use bevy_rapier3d::{prelude::{RigidBody, Collider, KinematicCharacterController, KinematicCharacterControllerOutput, CharacterLength}, na::{default_allocator, ClosedAdd, clamp}};
 
 use crate::WorldSettings;
 
@@ -14,10 +16,22 @@ pub struct MovementSettings {
     pub speed: f32
 }
 
-// #[derive(Resource)]
-// pub struct PlayerState {
-//     pub is_jumping: bool
-// }
+#[derive(Resource, Default)]
+pub struct JumpTimer(Option<Timer>);
+
+impl Deref for JumpTimer {
+    type Target = Option<Timer>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for JumpTimer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl Default for MovementSettings {
     fn default() -> Self {
@@ -54,12 +68,28 @@ impl Default for KeyBindings {
 #[derive(Component)]
 pub struct PlayerControl;
 
+#[derive(Default, Debug)]
+pub enum PlayerGroundedEnum {
+    Grounded,
+    #[default]
+    NonGrounded
+}
+
+#[derive(Component, Default, Debug)]
+pub struct PlayerState {
+    pub grounded_state: PlayerGroundedEnum,
+    pub time_grounded_changed: Stopwatch,
+    pub last_velocity: Vec3,
+    pub is_jumping: bool
+}
+
 pub fn setup_player(
     mut commands: Commands,
     world_settings: Res<WorldSettings>
 ) {
     commands.spawn((
         PlayerControl,
+        PlayerState::default(),
         Camera3dBundle {
             transform: Transform::from_xyz(5.0, 15.0, 5.0).looking_at(Vec3 {
                 z: world_settings.chunk_size as f32 / 2.0,
@@ -70,9 +100,11 @@ pub fn setup_player(
         },
         RigidBody::KinematicPositionBased,
         Collider::cuboid(0.5, 1.65, 0.5),
-        KinematicCharacterController::default(),
+        KinematicCharacterController {
+            snap_to_ground: Some(CharacterLength::Relative(0.5)),
+            ..default()
+        },
         KinematicCharacterControllerOutput::default(),
-        Velocity::default()
     ));
 }
 
@@ -82,16 +114,34 @@ pub fn player_move(
     primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<MovementSettings>,
     key_bindings: Res<KeyBindings>,
-    // player_state: ResMut<PlayerState>,
-    mut query: Query<(&mut Transform, &mut KinematicCharacterController, &KinematicCharacterControllerOutput, &mut Velocity), With<PlayerControl>>
+    mut jump_timer: ResMut<JumpTimer>,
+    mut query: Query<(&Transform, &mut KinematicCharacterController, &KinematicCharacterControllerOutput, &mut PlayerState), With<PlayerControl>>
 ) {
     if let Ok(window) = primary_window.get_single() {
-        for (mut transform, mut character_controller, character_output, mut falling_velocity) in query.iter_mut() {
-            let mut velocity = Vec3::ZERO;
+        for (transform, mut character_controller, character_output, mut player_state) in query.iter_mut() {
+            let mut move_velocity = Vec3::ZERO;
             let local_z = transform.local_z();
             let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
             let right = Vec3::new(local_z.z, 0.0, -local_z.x);
-            // let up = Vec3::new(0.0, 1000.0, 0.0);
+            // let jump = Vec3::new(0.0, 2.0, 0.0);
+            let jump_vel = 5.0;
+            let mut just_started_jumping = false;
+            // Approximativement 53m/s en chute libre dans les airs
+            let terminal_falling_velocity = 53.0; 
+
+            match (character_output.grounded, &mut player_state.grounded_state) {
+                (true, PlayerGroundedEnum::NonGrounded) => {
+                    player_state.grounded_state = PlayerGroundedEnum::Grounded;
+                    player_state.time_grounded_changed.reset();
+                },
+                (false, PlayerGroundedEnum::Grounded) => {
+                    player_state.grounded_state = PlayerGroundedEnum::NonGrounded;
+                    player_state.time_grounded_changed.reset();
+                },
+                _ => {
+                    player_state.time_grounded_changed.tick(time.delta());
+                }
+            }
 
             for key in keys.get_pressed() {
                match window.cursor.grab_mode {
@@ -100,33 +150,79 @@ pub fn player_move(
                         let key = *key;
 
                         if key == key_bindings.move_forward {
-                            velocity += forward;
+                            move_velocity += forward;
                         } else if key == key_bindings.move_backward {
-                            velocity -= forward;
+                            move_velocity -= forward;
                         } else if key == key_bindings.move_left {
-                            velocity -= right;
+                            move_velocity -= right;
                         } else if key == key_bindings.move_right {
-                            velocity += right;
+                            move_velocity += right;
                         } 
                     }
                 } 
             }
 
-            velocity = velocity.normalize_or_zero();
+            move_velocity = move_velocity.normalize_or_zero() * settings.speed;
 
-            let gravity_force = -0.981;
+            // let mut jump_timer: &mut Option<_> = &mut jump_timer;
+            for key in keys.get_just_pressed() {
+                match window.cursor.grab_mode {
+                    CursorGrabMode::None => (),
+                    _ => {
+                        let key = *key;
 
-            if character_output.grounded {
-                falling_velocity.linvel = Vec3::ZERO;
-            } else {
-                falling_velocity.linvel = Vec3 {
-                    y: clamp(falling_velocity.linvel.y + gravity_force * time.delta_seconds(), -15.0, 0.0),
-                    ..default()
-                };
+                        if key == key_bindings.jump && character_output.grounded {
+                            // jump_timer.get_or_insert(Timer::from_seconds(0.5, TimerMode::Once));
+                            player_state.is_jumping = true;
+                            just_started_jumping = true;
+                        }
+                    }
+                }
             }
+           
+            // let jump_timer: &mut Option<Timer> = &mut**jump_timer;
+            // jump_timer.as_mut().map(|timer| timer.tick(time.delta()));
+            //
+            // if let Some(timer) = jump_timer {
+            //     if !timer.finished() {
+            //         move_velocity.y = jump_vel;
+            //     } else {
+            //         jump_timer.take();
+            //     }
+            // }
 
-            transform.translation += velocity * time.delta_seconds() * settings.speed;
-            character_controller.translation = Some(falling_velocity.linvel * time.delta_seconds());
+            let t = player_state.time_grounded_changed.elapsed_secs();
+            let a = -0.981;
+            let v0 = if player_state.is_jumping {
+                1.0
+            } else {
+                0.0
+            };
+
+            let v = v0 + a * t;
+
+            let falling_velocity = match (&player_state.grounded_state, &just_started_jumping) {
+                (PlayerGroundedEnum::NonGrounded, _) => Vec3::new(0.0, clamp(
+                    v,
+                    -terminal_falling_velocity,
+                    terminal_falling_velocity
+                ), 0.0),
+                (PlayerGroundedEnum::Grounded, false) => Vec3::new(0.0, -0.001, 0.0),
+                (PlayerGroundedEnum::Grounded, true) => Vec3::new(0.0, jump_vel, 0.0),
+            };
+
+            let mut final_velocity = move_velocity * time.delta_seconds() + falling_velocity;
+
+            info!("falling debug: vel-y={:.4} t={:.4} g={}",
+                final_velocity.y,
+                t,
+                character_output.grounded
+            );
+
+            
+            character_controller.translation = Some(final_velocity);
+
+            // player_state.last_velocity = character_output.effective_translation / time.delta_seconds();
         }
     }
 }
@@ -202,6 +298,7 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<InputState>()
             .init_resource::<MovementSettings>()
             .init_resource::<KeyBindings>()
+            .init_resource::<JumpTimer>()
             .add_systems(Startup, setup_player)
             .add_systems(Startup, initial_grab_cursor)
             .add_systems(Update, player_move)

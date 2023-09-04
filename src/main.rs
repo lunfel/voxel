@@ -42,7 +42,7 @@ pub struct WorldSettings {
 impl Default for WorldSettings {
     fn default() -> Self {
         Self {
-            chunk_size: 32,
+            chunk_size: 16,
             unique_blocks: 4
         }
     }
@@ -72,7 +72,7 @@ fn setup(
     for x in 0..=chunk_size {
         for y in 0..=chunk_size {
             for z in 0..=chunk_size {
-                if y == 3 {
+                if y == 3 || y == 0 {
                     // let height = rng.gen_range(0..3);
                     let material_index = rng.gen_range(0..world_settings.unique_blocks);
 
