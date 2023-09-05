@@ -3,7 +3,7 @@ use std::ops::{DerefMut, Deref};
 use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader, time::Stopwatch, core::Zeroable, app::AppExit};
 use bevy_rapier3d::{prelude::{RigidBody, Collider, KinematicCharacterController, KinematicCharacterControllerOutput, CharacterLength}, na::{default_allocator, ClosedAdd, clamp}};
 
-use crate::WorldSettings;
+use crate::{WorldSettings, resources::world::CHUNK_SIZE};
 
 #[derive(Resource, Default)]
 pub struct InputState {
@@ -84,16 +84,15 @@ pub struct PlayerState {
 }
 
 pub fn setup_player(
-    mut commands: Commands,
-    world_settings: Res<WorldSettings>
+    mut commands: Commands
 ) {
     commands.spawn((
         PlayerControl,
         PlayerState::default(),
         Camera3dBundle {
             transform: Transform::from_xyz(5.0, 15.0, 5.0).looking_at(Vec3 {
-                z: world_settings.chunk_size as f32 / 2.0,
-                x: world_settings.chunk_size as f32 / 2.0,
+                z: CHUNK_SIZE as f32 / 2.0,
+                x: CHUNK_SIZE as f32 / 2.0,
                 ..default()
             }, Vec3::Y),
             ..default()
@@ -188,7 +187,7 @@ pub fn player_move(
             } else {
                 let grav = Vec3::new(0.0, -9.81, 0.0);
                 let delta = time.delta_seconds();
-                info!("Y vel: {} + {} * {}", v0_y, grav, delta);
+                // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
                 v0_y + grav * delta
             };
 

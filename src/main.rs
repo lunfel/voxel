@@ -1,21 +1,25 @@
 mod components;
 mod systems;
+mod resources;
 
 use std::f32::consts::PI;
 
 use bevy::{prelude::*, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}, pbr::CascadeShadowConfigBuilder};
 use rand::Rng;
-use systems::player::player_control::PlayerPlugin;
+use resources::world::{GameWorld, CHUNK_SIZE, GameBlockType};
+use systems::{player::player_control::PlayerPlugin, world_generation::generate_single_chunk};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
 
 fn main() {
     App::new()
         .init_resource::<WorldSettings>()
+        .init_resource::<GameWorld>()
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(PlayerPlugin)
+        .add_systems(Startup, generate_world)
         .add_systems(Startup, setup)
         .add_systems(Startup, setup_physics)
         .add_plugins(LogDiagnosticsPlugin::default())
@@ -35,62 +39,94 @@ fn setup_physics(mut commands: Commands) {
 
 #[derive(Resource)]
 pub struct WorldSettings {
-    chunk_size: u32,
     unique_blocks: usize 
 }
 
 impl Default for WorldSettings {
     fn default() -> Self {
         Self {
-            chunk_size: 16,
             unique_blocks: 4
         }
     }
+}
+
+fn generate_world(
+    mut game_world: ResMut<GameWorld>
+) {
+    let chunk = generate_single_chunk();
+
+    game_world.chunks.insert((0, 0, 0), chunk);
 }
 
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    world_settings: Res<WorldSettings>
+    world_settings: Res<WorldSettings>,
+    game_world: Res<GameWorld>
 ) {
-    let chunk_size = world_settings.chunk_size;
     let color_range = 0.0..1.0;
     let mut rng = rand::thread_rng();
 
     let mesh_handle = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
-    let materials_handles: Vec<Handle<StandardMaterial>> = {
-        (0..world_settings.unique_blocks).into_iter().map(|index| {
-            let red = rng.gen_range(color_range.clone());
-            let green = rng.gen_range(color_range.clone());
-            let blue = rng.gen_range(color_range.clone());
+    let ground_material: Handle<StandardMaterial> = materials.add(Color::rgb(242.0 / 255.0, 212.0 / 255.0, 194.0 / 255.0).into());
+    // let materials_handles: Vec<Handle<StandardMaterial>> = {
+    //     (0..world_settings.unique_blocks).into_iter().map(|index| {
+    //         let red = rng.gen_range(color_range.clone());
+    //         let green = rng.gen_range(color_range.clone());
+    //         let blue = rng.gen_range(color_range.clone());
+    //
+    //         materials.add(Color::rgb(red, green, blue).into())
+    //     }).collect::<Vec<Handle<StandardMaterial>>>()
+    // };
 
-            materials.add(Color::rgb(red, green, blue).into())
-        }).collect::<Vec<Handle<StandardMaterial>>>()
-    };
-
-    for x in 0..=chunk_size {
-        for y in 0..=chunk_size {
-            for z in 0..=chunk_size {
-                if y == 3 || y == 0 {
-                    // let height = rng.gen_range(0..3);
-                    let material_index = rng.gen_range(0..world_settings.unique_blocks);
-
-                    commands.spawn((PbrBundle {
-                        mesh: mesh_handle.clone(),
-                        material: materials_handles.get(material_index).expect("Material does not exist").clone(),
-                        transform: Transform::from_xyz(x as f32, y as f32, z as f32),
-                        ..default()
-                    },
-                        Collider::cuboid(0.5, 0.5, 0.5),
-                        Friction {
-                            coefficient: 0.0,
-                            combine_rule: CoefficientCombineRule::Min
-                        }));
+    for (_, chunk) in game_world.chunks.iter() {
+        for x in 0..CHUNK_SIZE {
+            for y in 0..CHUNK_SIZE {
+                for z in 0..CHUNK_SIZE {
+                    match chunk.blocks[x][y][z].block_type {
+                        GameBlockType::Ground => {
+                            commands.spawn((PbrBundle {
+                                mesh: mesh_handle.clone(),
+                                material: ground_material.clone(),
+                                transform: Transform::from_xyz(x as f32, y as f32, z as f32),
+                                ..default()
+                            },
+                                Collider::cuboid(0.5, 0.5, 0.5),
+                                Friction {
+                                    coefficient: 0.0,
+                                    combine_rule: CoefficientCombineRule::Min
+                                }));
+                        },
+                        _ => ()
+                    } 
                 }
             }
         }
     }
+
+    // for x in 0..=chunk_size {
+    //     for y in 0..=chunk_size {
+    //         for z in 0..=chunk_size {
+    //             if y == 3 || y == 0 {
+    //                 // let height = rng.gen_range(0..3);
+    //                 let material_index = rng.gen_range(0..world_settings.unique_blocks);
+    //
+    //                 commands.spawn((PbrBundle {
+    //                     mesh: mesh_handle.clone(),
+    //                     material: materials_handles.get(material_index).expect("Material does not exist").clone(),
+    //                     transform: Transform::from_xyz(x as f32, y as f32, z as f32),
+    //                     ..default()
+    //                 },
+    //                     Collider::cuboid(0.5, 0.5, 0.5),
+    //                     Friction {
+    //                         coefficient: 0.0,
+    //                         combine_rule: CoefficientCombineRule::Min
+    //                     }));
+    //             }
+    //         }
+    //     }
+    // }
 
     commands.insert_resource(AmbientLight {
         brightness: 0.15,
