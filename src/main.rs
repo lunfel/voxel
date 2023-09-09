@@ -50,12 +50,20 @@ impl Default for WorldSettings {
     }
 }
 
+pub type Point3D = (u8, u8, u8);
+
 fn generate_world(
     mut game_world: ResMut<GameWorld>
 ) {
-    let chunk = generate_single_chunk();
+    for x in 0..2 {
+        for z in 0..2 {
+            let point = (x, 0, z);
+            let chunk = generate_single_chunk(&point);
 
-    game_world.chunks.insert((0, 0, 0), chunk);
+            game_world.chunks.insert(point, chunk);
+        }
+    }
+
 }
 
 fn setup(
@@ -69,7 +77,7 @@ fn setup(
     let mut rng = rand::thread_rng();
 
     let mesh_handle = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
-    let ground_material: Handle<StandardMaterial> = materials.add(Color::rgb(242.0 / 255.0, 212.0 / 255.0, 194.0 / 255.0).into());
+    let ground_material: Handle<StandardMaterial> = materials.add(Color::rgb(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0).into());
     // let materials_handles: Vec<Handle<StandardMaterial>> = {
     //     (0..world_settings.unique_blocks).into_iter().map(|index| {
     //         let red = rng.gen_range(color_range.clone());
@@ -80,7 +88,7 @@ fn setup(
     //     }).collect::<Vec<Handle<StandardMaterial>>>()
     // };
 
-    for (_, chunk) in game_world.chunks.iter() {
+    for (coord, chunk) in game_world.chunks.iter() {
         for x in 0..CHUNK_SIZE {
             for y in 0..CHUNK_SIZE {
                 for z in 0..CHUNK_SIZE {
@@ -89,7 +97,11 @@ fn setup(
                             commands.spawn((PbrBundle {
                                 mesh: mesh_handle.clone(),
                                 material: ground_material.clone(),
-                                transform: Transform::from_xyz(x as f32, y as f32, z as f32),
+                                transform: Transform::from_xyz(
+                                    x as f32 + coord.0 as f32 * CHUNK_SIZE as f32,
+                                    y as f32 + coord.1 as f32 * CHUNK_SIZE as f32,
+                                    z as f32 + coord.2 as f32 * CHUNK_SIZE as f32
+                                ),
                                 ..default()
                             },
                                 Collider::cuboid(0.5, 0.5, 0.5),

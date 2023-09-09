@@ -123,7 +123,7 @@ pub fn player_move(
             let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
             let right = Vec3::new(local_z.z, 0.0, -local_z.x);
             // let jump = Vec3::new(0.0, 2.0, 0.0);
-            let jump_vel = 5.0;
+            let jump_vel = 3.0;
             let mut just_started_jumping = false;
             // Approximativement 53m/s en chute libre dans les airs
             let terminal_falling_velocity = 53.0; 
