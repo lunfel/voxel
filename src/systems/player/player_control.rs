@@ -1,9 +1,9 @@
 use std::ops::{DerefMut, Deref};
 
-use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader, time::Stopwatch, core::Zeroable, app::AppExit};
-use bevy_rapier3d::{prelude::{RigidBody, Collider, KinematicCharacterController, KinematicCharacterControllerOutput, CharacterLength}, na::{default_allocator, ClosedAdd, clamp}};
+use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader, time::Stopwatch, app::AppExit};
+use bevy_rapier3d::{prelude::{RigidBody, Collider, KinematicCharacterController, KinematicCharacterControllerOutput, CharacterLength}};
 
-use crate::{WorldSettings, resources::world::CHUNK_SIZE};
+use crate::{resources::world::CHUNK_SIZE};
 
 #[derive(Resource, Default)]
 pub struct InputState {
@@ -37,7 +37,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.00012,
-            speed: 5.0
+            speed: 10.0 // Used to be 5
         }
     }
 }
@@ -185,7 +185,7 @@ pub fn player_move(
                 // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
                 Vec3::new(0.0, jump_vel, 0.0)
             } else {
-                let grav = Vec3::new(0.0, -9.81, 0.0);
+                let grav = Vec3::new(0.0, -0.0001, 0.0);
                 let delta = time.delta_seconds();
                 // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
                 v0_y + grav * delta
