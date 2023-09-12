@@ -41,8 +41,8 @@ fn generate_world(
     mut game_world: ResMut<GameWorld>
 ) {
     info!("Generate world chunks");
-    for x in 0..11 {
-        for z in 0..11 {
+    for x in 0..8 {
+        for z in 0..8 {
             let point = (x, 0, z);
             let chunk = generate_single_chunk(&point);
 
