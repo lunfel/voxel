@@ -3,7 +3,7 @@ use std::ops::{DerefMut, Deref};
 use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader, time::Stopwatch, app::AppExit};
 use bevy_rapier3d::prelude::{RigidBody, Collider, KinematicCharacterController, KinematicCharacterControllerOutput, CharacterLength};
 
-use crate::resources::world::CHUNK_SIZE;
+use crate::settings::CHUNK_SIZE;
 
 #[derive(Resource, Default)]
 pub struct InputState {

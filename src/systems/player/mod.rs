@@ -4,7 +4,7 @@ use std::f32::consts::PI;
 
 use bevy::{prelude::{*, shape::Box}, render::{mesh::Indices, render_resource::PrimitiveTopology}, pbr::CascadeShadowConfigBuilder};
 
-use crate::{systems::{player::player_control::{MovementSettings, KeyBindings, JumpTimer, setup_player, InputState, initial_grab_cursor, player_move, player_look, cursor_grab}, world_generation::generate_world}, resources::world::{GameChunk, GameBlockType, GameWorld, CHUNK_SIZE}, utils::point::Point3D};
+use crate::{systems::{player::player_control::{MovementSettings, KeyBindings, JumpTimer, setup_player, InputState, initial_grab_cursor, player_move, player_look, cursor_grab}, world_generation::generate_world}, utils::point::Point3D, world::{GameWorld, block::GameBlockType, chunk::GameChunk}, settings::CHUNK_SIZE};
 
 pub struct PlayerPlugin;
 

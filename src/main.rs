@@ -1,12 +1,12 @@
-mod components;
 mod systems;
-mod resources;
 mod utils;
+mod world;
+mod settings;
 
 use bevy::{prelude::*, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
-use resources::world::GameWorld;
 use systems::{world_generation::WorldGenerationPlugin, player::PlayerPlugin};
 use bevy_rapier3d::prelude::*;
+use world::GameWorld;
 
 
 fn main() {
@@ -17,7 +17,6 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldGenerationPlugin)
         .add_plugins(PlayerPlugin)
-        // .add_systems(Startup, setup.after(generate_world))
         .add_systems(Startup, setup_physics)
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default())

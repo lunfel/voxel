@@ -1,28 +1,9 @@
-use bevy::{prelude::Resource, utils::HashMap};
+use crate::{settings::CHUNK_SIZE, utils::point::Point3D};
 
-use crate::utils::point::Point3D;
-
-pub const CHUNK_SIZE: usize = 16;
-
-#[derive(Resource, Default)]
-pub struct GameWorld {
-    pub chunks: HashMap<Point3D<usize>, GameChunk>
-}
+use super::block::GameBlock;
 
 pub struct GameChunk {
     pub blocks: [[[GameBlock; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE]
-}
-
-#[derive(Default, Copy, Clone, PartialEq)]
-pub enum GameBlockType {
-    #[default]
-    Empty,
-    Ground
-}
-
-#[derive(Default, Copy, Clone)]
-pub struct GameBlock {
-    pub block_type: GameBlockType
 }
 
 impl GameChunk {

@@ -5,12 +5,6 @@ pub struct Point3D<T> {
     pub z: T
 }
 
-impl<T> Point3D<T> {
-    pub fn new(x: T, y: T, z: T) -> Self {
-        Self { x, y, z }
-    }
-}
-
 impl Point3D<i8> {
     pub fn front_neighbor(&self) -> Self {
         Self {

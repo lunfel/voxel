@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use noise::{Perlin, NoiseFn};
 
-use crate::{resources::world::{GameChunk, CHUNK_SIZE, GameBlockType, GameWorld}, utils::point::Point3D};
+use crate::{world::{chunk::GameChunk, block::GameBlockType, GameWorld}, utils::point::Point3D, settings::CHUNK_SIZE};
 
 #[derive(Resource)]
 pub struct WorldGenerationState {
