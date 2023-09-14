@@ -1,6 +1,18 @@
+use std::ops::Deref;
+
 use crate::{settings::CHUNK_SIZE, utils::point::Point3D};
 
 use super::block::GameBlock;
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct ChunkCoord(Point3D<usize>);
+
+impl Deref for ChunkCoord {
+    type Target = Point3D<usize>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 pub struct GameChunk {
     pub blocks: [[[GameBlock; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE]

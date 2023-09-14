@@ -98,6 +98,14 @@ pub fn setup_player(
             }, Vec3::Y),
             ..default()
         },
+        // FogSettings {
+        //     color: Color::rgba(0.25, 0.25, 0.05, 1.0),
+        //     falloff: FogFalloff::Linear {
+        //         start: 25.0,
+        //         end: 40.0,
+        //     },
+        //     ..default()
+        // },
         RigidBody::KinematicPositionBased,
         Collider::cuboid(0.5, 1.65, 0.5),
         KinematicCharacterController {

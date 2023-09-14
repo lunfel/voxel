@@ -109,6 +109,17 @@ where P: Into<Point3D<i8>> + Clone
 
                 nb_faces += 1;
             }
+        } else {
+            attributes.iter()
+                .for_each(|attribute| {
+                    vertices.push(*attribute)
+                });
+
+            indices_template.iter()
+                .map(|i| i + nb_faces * 4)
+                .for_each(|i| indices.push(i));
+
+            nb_faces += 1;
         }
     }
 
@@ -183,12 +194,12 @@ fn setup(
     // directional 'sun' light
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            illuminance: 10000.0,
+            illuminance: 8000.0,
             shadows_enabled: true,
             ..default()
         },
         transform: Transform {
-            translation: Vec3::new(0.0, 2.0, 0.0),
+            translation: Vec3::new(0.0, 6.0, 0.0),
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
         },
