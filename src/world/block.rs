@@ -1,7 +1,8 @@
-#[derive(Default, Copy, Clone, PartialEq)]
+#[derive(Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum GameBlockType {
     #[default]
     Empty,
+    Rock,
     Ground
 }
 

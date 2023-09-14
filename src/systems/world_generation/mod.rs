@@ -1,4 +1,6 @@
+use std::cmp::{max, min};
 use bevy::prelude::*;
+use bevy_inspector_egui::egui::lerp;
 use noise::{Perlin, NoiseFn};
 
 use crate::{world::{chunk::GameChunk, block::GameBlockType, GameWorld}, utils::point::Point3D, settings::CHUNK_SIZE};
@@ -30,7 +32,8 @@ impl Plugin for WorldGenerationPlugin {
 pub fn generate_single_chunk<P>(coord: &P) -> GameChunk
 where P: Into<Point3D<usize>> + Clone
 {
-    let perlin = Perlin::new(1);
+    let height_perlin = Perlin::new(1);
+    let ground_layer_perlin = Perlin::new(2);
     let coord: Point3D<usize> = (*coord).clone().into();
 
     let mut game_chunk = GameChunk::new();
@@ -41,15 +44,21 @@ where P: Into<Point3D<usize>> + Clone
                 let px = (x as f64 / 20.0 + 0.1) + (coord.x as f64 * CHUNK_SIZE as f64 / 20.0);
                 let pz = (z as f64 / 20.0 + 0.1) + (coord.z as f64 * CHUNK_SIZE as f64 / 20.0);
 
-                let value = perlin.get([px, pz]) + 1.0;
+                // perlin.get gives an f64 value between -1 and 1
+                let height_value = height_perlin.get([px, pz]) + 1.0;
+                let height = (height_value * 6.0).round() as usize + 1;
 
-                // info!("perlin: {}, height adj: {}", value, (value * 4.0).round() as u8 + 1);
-                if ((value * 4.0).round()) as u8 + 1 > y as u8 {
-                    game_chunk.blocks[x][y][z].block_type = GameBlockType::Ground
+                if height == y {
+                    game_chunk.blocks[x][y][z].block_type = match ground_layer_perlin.get([px, pz]) {
+                        0.5..=1.0 => GameBlockType::Rock,
+                        _ => GameBlockType::Ground
+                    }
+                } else if height > y {
+                    game_chunk.blocks[x][y][z].block_type = GameBlockType::Rock
                 }
             }
         } 
-    } 
+    }
 
     game_chunk
 }

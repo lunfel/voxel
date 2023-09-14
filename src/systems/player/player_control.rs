@@ -135,7 +135,6 @@ pub fn player_move(
             let jump_vel = 3.0;
             let mut just_started_jumping = false;
             // Approximativement 53m/s en chute libre dans les airs
-            let terminal_falling_velocity = 53.0; 
 
             match (character_output.grounded, &mut player_state.grounded_state) {
                 (true, PlayerGroundedEnum::NonGrounded) => {

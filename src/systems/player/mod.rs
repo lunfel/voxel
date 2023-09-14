@@ -3,6 +3,7 @@ pub mod player_control;
 use std::f32::consts::PI;
 
 use bevy::{prelude::{*, shape::Box}, render::{mesh::Indices, render_resource::PrimitiveTopology}, pbr::CascadeShadowConfigBuilder};
+use bevy::utils::HashMap;
 
 use crate::{systems::{player::player_control::{MovementSettings, KeyBindings, JumpTimer, setup_player, InputState, initial_grab_cursor, player_move, player_look, cursor_grab}, world_generation::generate_world}, utils::point::Point3D, world::{GameWorld, block::GameBlockType, chunk::GameChunk}, settings::CHUNK_SIZE};
 
@@ -147,7 +148,10 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     game_world: Res<GameWorld>
 ) {
-    let ground_material: Handle<StandardMaterial> = materials.add(Color::rgb(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0).into());
+    let mut material_map = HashMap::new();
+
+    material_map.insert(GameBlockType::Rock, materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0).into()));
+    material_map.insert(GameBlockType::Ground, materials.add(Color::rgb(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0).into()));
 
     info!("Inserting cubes in the world");
     for (chunk_coord, chunk) in game_world.chunks.iter() {
@@ -157,12 +161,13 @@ fn setup(
                     let block_coord: Point3D<usize> = (x, y, z).into();
                     if let Some(block) = chunk.get_block(&block_coord) {
                         match block.block_type {
-                            GameBlockType::Ground => {
+                            GameBlockType::Empty => (),
+                            _ => {
                                 if let Some(mesh) = create_custom_cube(&(x as i8, y as i8, z as i8), &chunk) {
                                     let mesh_handle = meshes.add(mesh);
                                     commands.spawn(PbrBundle {
                                         mesh: mesh_handle.clone(),
-                                        material: ground_material.clone(),
+                                        material: material_map.get(&block.block_type).unwrap().clone(),
                                         transform: Transform::from_xyz(
                                             x as f32 + chunk_coord.x as f32 * CHUNK_SIZE as f32,
                                             y as f32 + chunk_coord.y as f32 * CHUNK_SIZE as f32,
@@ -176,7 +181,7 @@ fn setup(
                                         //     combine_rule: CoefficientCombineRule::Min
                                         // }));
                                 }
-                            },
+                            }
                             _ => ()
                         } 
                     }
