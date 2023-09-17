@@ -7,7 +7,7 @@ use bevy::{prelude::*, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPl
 use systems::{world_generation::WorldGenerationPlugin, player::PlayerPlugin};
 use bevy_rapier3d::prelude::*;
 use world::GameWorld;
-
+use crate::systems::world_generation::BlockMaterialMap;
 
 fn main() {
     App::new()
@@ -21,6 +21,7 @@ fn main() {
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default())
         // .add_plugins(WorldInspectorPlugin::new())
+        .init_resource::<BlockMaterialMap>()
         .run();
 } 
 

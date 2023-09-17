@@ -1,9 +1,9 @@
-use std::cmp::{max, min};
 use bevy::prelude::*;
-use bevy_inspector_egui::egui::lerp;
-use noise::{Perlin, NoiseFn};
+use bevy::utils::hashbrown::HashMap;
+use noise::{NoiseFn, Perlin};
 
-use crate::{world::{chunk::GameChunk, block::GameBlockType, GameWorld}, utils::point::Point3D, settings::CHUNK_SIZE};
+use crate::{settings::CHUNK_SIZE, world::{block::GameBlockType, chunk::GameChunk, GameWorld}};
+use crate::world::chunk::ChunkCoord;
 
 #[derive(Resource)]
 pub struct WorldGenerationState {
@@ -29,14 +29,14 @@ impl Plugin for WorldGenerationPlugin {
     }
 }
 
-pub fn generate_single_chunk<P>(coord: &P) -> GameChunk
-where P: Into<Point3D<usize>> + Clone
+pub fn generate_single_chunk<'a, P>(coord: &P, material_map: &Res<BlockMaterialMap>) -> GameChunk
+where P: Into<ChunkCoord> + Clone
 {
     let height_perlin = Perlin::new(1);
     let ground_layer_perlin = Perlin::new(2);
-    let coord: Point3D<usize> = (*coord).clone().into();
+    let coord: ChunkCoord = (*coord).clone().into();
 
-    let mut game_chunk = GameChunk::new();
+    let mut game_chunk = GameChunk::new(coord.clone());
 
     for x in 0..CHUNK_SIZE {
        for y in 0..CHUNK_SIZE {
@@ -63,17 +63,54 @@ where P: Into<Point3D<usize>> + Clone
     game_chunk
 }
 
+pub type BlockMaterialHashMap = HashMap<GameBlockType, Handle<StandardMaterial>>;
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct BlockMaterialMap(BlockMaterialHashMap);
+
+impl FromWorld for BlockMaterialMap {
+    fn from_world(world: &mut World) -> Self {
+        let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
+
+        let mut material_map: BlockMaterialHashMap = HashMap::new();
+
+        material_map.insert(GameBlockType::Rock, materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0).into()));
+        material_map.insert(GameBlockType::Ground, materials.add(Color::rgb(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0).into()));
+
+        Self(material_map)
+    }
+}
+
 pub fn generate_world(
     mut game_world: ResMut<GameWorld>,
-    mut world_generation_state: ResMut<WorldGenerationState>
+    mut world_generation_state: ResMut<WorldGenerationState>,
+    mut mesh_manager: ResMut<Assets<Mesh>>,
+    block_material_map: Res<BlockMaterialMap>,
+    mut commands: Commands
 ) {
     info!("Generate world chunks");
     for x in 0..8 {
         for z in 0..8 {
-            let point: Point3D<usize> = (x as usize, 0 as usize, z as usize).into();
-            let chunk = generate_single_chunk(&point);
+            let point: ChunkCoord = (x as usize, 0 as usize, z as usize).into();
+            let mut chunk = generate_single_chunk(&point, &block_material_map);
 
-            game_world.chunks.insert(point, chunk);
+            let entities: Vec<_> = chunk.render_chunk(&mut mesh_manager, &block_material_map)
+                .into_iter()
+                .map(|pbr| {
+                    commands.spawn(pbr).id()
+                })
+                .collect();
+
+            chunk.replace_block_entities(entities)
+                .into_iter()
+                .for_each(|_old_entity| {
+                    // todo: remove old entities
+                });
+
+            game_world.chunks.insert(
+                point,
+                chunk
+            );
         }
     }
 
