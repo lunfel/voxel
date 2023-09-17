@@ -73,7 +73,7 @@ impl GameChunk {
         new_entities
     }
 
-    pub fn render_chunk(&self, mesh_manager: &mut ResMut<Assets<Mesh>>, block_material_mapping: &Res<BlockMaterialMap>) -> Vec<PbrBundle> {
+    pub fn render_chunk(&self, mesh_manager: &mut ResMut<Assets<Mesh>>, block_material_mapping: &Res<BlockMaterialMap>) -> (Vec<PbrBundle>, u32) {
         self.render_naive(mesh_manager, block_material_mapping)
 
         // for (coord, block) in self.blocks.blocks_with_coord() {
@@ -127,10 +127,12 @@ impl GameChunk {
         // RenderedGameChunk::new(self, mesh)
     }
 
-    fn render_naive(&self, mesh_manager: &mut ResMut<Assets<Mesh>>, block_material_mapping: &Res<BlockMaterialMap>) -> Vec<PbrBundle> {
+    fn render_naive(&self, mesh_manager: &mut ResMut<Assets<Mesh>>, block_material_mapping: &Res<BlockMaterialMap>) -> (Vec<PbrBundle>, u32) {
         let mut bundles = Vec::new();
 
         info!("Inserting cubes in the world");
+
+        let mut nb_triangles = 0;
 
         for x in 0..CHUNK_SIZE {
             for y in 0..CHUNK_SIZE {
@@ -140,7 +142,8 @@ impl GameChunk {
                         match block.block_type {
                             GameBlockType::Empty => (),
                             _ => {
-                                if let Some(mesh) = create_custom_cube(&(x as i8, y as i8, z as i8), &self) {
+                                if let Some((mesh, nb_faces)) = create_custom_cube(&(x as i8, y as i8, z as i8), &self) {
+                                    nb_triangles += nb_faces;
                                     let mesh_handle = mesh_manager.add(mesh);
                                     bundles.push(PbrBundle {
                                         mesh: mesh_handle.clone(),
@@ -166,7 +169,9 @@ impl GameChunk {
             }
         }
 
-        bundles
+        nb_triangles *= 2;
+
+        (bundles, nb_triangles)
     }
 
     pub fn get_block<P>(&self, maybe_into_coord: &P) -> Option<&GameBlock>
@@ -185,7 +190,7 @@ impl GameChunk {
     }
 }
 
-fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk) -> Option<Mesh>
+fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk) -> Option<(Mesh, u32)>
     where P: Into<Point3D<i8>> + Clone
 {
     let coord: Point3D<i8> = (*into_coord).clone().into();
@@ -196,7 +201,7 @@ fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk) -> Option<Mesh>
     let mut indices: Vec<u32> = vec![];
 
     let indices_template = [0, 1, 2, 2, 3, 0];
-    let mut nb_faces = 0;
+    let mut nb_faces: u32 = 0;
 
     let faces: [_; 6] = [
         (
@@ -299,6 +304,6 @@ fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk) -> Option<Mesh>
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
     mesh.set_indices(Some(indices));
-    Some(mesh)
+    Some((mesh, nb_faces))
 }
 

@@ -29,7 +29,7 @@ impl Plugin for WorldGenerationPlugin {
     }
 }
 
-pub fn generate_single_chunk<'a, P>(coord: &P, material_map: &Res<BlockMaterialMap>) -> GameChunk
+pub fn generate_single_chunk<'a, P>(coord: &P) -> GameChunk
 where P: Into<ChunkCoord> + Clone
 {
     let height_perlin = Perlin::new(1);
@@ -89,13 +89,19 @@ pub fn generate_world(
     mut commands: Commands
 ) {
     info!("Generate world chunks");
+
+    let mut total_triangles = 0;
+
     for x in 0..8 {
         for z in 0..8 {
             let point: ChunkCoord = (x as usize, 0 as usize, z as usize).into();
-            let mut chunk = generate_single_chunk(&point, &block_material_map);
+            let mut chunk = generate_single_chunk(&point);
 
-            let entities: Vec<_> = chunk.render_chunk(&mut mesh_manager, &block_material_map)
-                .into_iter()
+            let (pbrs, nb_triangles) = chunk.render_chunk(&mut mesh_manager, &block_material_map);
+
+            total_triangles += nb_triangles;
+
+            let entities: Vec<_> = pbrs.into_iter()
                 .map(|pbr| {
                     commands.spawn(pbr).id()
                 })
@@ -113,6 +119,8 @@ pub fn generate_world(
             );
         }
     }
+
+    info!("Total Rendered triangles: {}", total_triangles);
 
     world_generation_state.finished_generating = true;
 }
