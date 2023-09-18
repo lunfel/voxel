@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::prelude::shape::Cube;
 use bevy::utils::hashbrown::HashMap;
 use noise::{NoiseFn, Perlin};
 

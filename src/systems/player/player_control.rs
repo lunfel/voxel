@@ -99,10 +99,10 @@ pub fn setup_player(
             ..default()
         },
         FogSettings {
-            color: Color::rgba(0.5, 0.25, 0.05, 1.0),
+            color: Color::rgba(0.5, 0.5, 0.5, 0.8),
             falloff: FogFalloff::Linear {
-                start: 50.0,
-                end: 75.0,
+                start: 100.0,
+                end: 125.0,
             },
             ..default()
         },

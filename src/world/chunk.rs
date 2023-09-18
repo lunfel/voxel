@@ -1,11 +1,10 @@
 use std::mem::swap;
-use std::ops::Deref;
 use bevy::prelude::*;
 use bevy::prelude::shape;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 
 use crate::{settings::CHUNK_SIZE, utils::point::Point3D};
-use crate::systems::world_generation::{BlockMaterialHashMap, BlockMaterialMap};
+use crate::systems::world_generation::BlockMaterialMap;
 use crate::world::block::{BlockCoord, GameBlockType};
 
 use super::block::GameBlock;
@@ -72,16 +71,6 @@ impl GameChunk {
         self.render_naive(mesh_manager, block_material_mapping)
     }
 
-    fn render_single_mesh() -> (PbrBundle, u32) {
-        for x in 0..CHUNK_SIZE {
-            for y in 0..CHUNK_SIZE {
-                for z in 0..CHUNK_SIZE {}
-            }
-        }
-
-        todo!()
-    }
-
     fn render_naive(&self, mesh_manager: &mut ResMut<Assets<Mesh>>, block_material_mapping: &Res<BlockMaterialMap>) -> (Vec<PbrBundle>, u32) {
         let mut bundles = Vec::new();
 
@@ -98,7 +87,7 @@ impl GameChunk {
                         match block.block_type {
                             GameBlockType::Empty => (),
                             _ => {
-                                create_custom_cube(&(x, y, z), &self, &mut mesh, &mut indices, &mut total_nb_faces, &mut vertices);
+                                create_custom_cube(&(x, y, z), &self, &mut indices, &mut total_nb_faces, &mut vertices);
 
                                     // Collider::cuboid(0.5, 0.5, 0.5),
                                     // Friction {
@@ -153,18 +142,14 @@ impl GameChunk {
     }
 }
 
-fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk, mesh: &mut Mesh, indices: &mut Vec<u32>, total_nb_faces: &mut u32, vertices: &mut VertexBuffer)
+fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk, indices: &mut Vec<u32>, total_nb_faces: &mut u32, vertices: &mut VertexBuffer)
     where P: Into<BlockCoord> + Clone
 {
     let coord: BlockCoord = (*into_coord).clone().into();
     // suppose Y-up right hand, and camera look from +z to -z
     let sp = shape::Box::new(1.0, 1.0, 1.0);
 
-    // let mut vertices: Vec<([f32; 3], [f32; 3], [f32; 2])> = vec![];
-    // let mut indices: Vec<u32> = vec![];
-
     let indices_template = [0, 1, 2, 2, 3, 0];
-    // let mut nb_faces: u32 = 0;
 
     let faces: [_; 6] = [
         (
