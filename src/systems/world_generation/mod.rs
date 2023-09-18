@@ -93,8 +93,8 @@ pub fn generate_world(
 
     let mut total_triangles = 0;
 
-    for x in 0..30 {
-        for z in 0..30 {
+    for x in 0..50 {
+        for z in 0..50 {
             let point: ChunkCoord = (x as usize, 0 as usize, z as usize).into();
             let mut chunk = generate_single_chunk(&point);
 

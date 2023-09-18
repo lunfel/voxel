@@ -2,11 +2,13 @@ mod systems;
 mod utils;
 mod world;
 mod settings;
+mod screen;
 
 use bevy::{prelude::*, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
 use systems::{world_generation::WorldGenerationPlugin, player::PlayerPlugin};
 use bevy_rapier3d::prelude::*;
 use world::GameWorld;
+use crate::screen::ScreenPlugin;
 use crate::systems::world_generation::BlockMaterialMap;
 
 fn main() {
@@ -17,6 +19,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldGenerationPlugin)
         .add_plugins(PlayerPlugin)
+        .add_plugins(ScreenPlugin)
         .add_systems(Startup, setup_physics)
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default())

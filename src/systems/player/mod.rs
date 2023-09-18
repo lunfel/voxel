@@ -2,8 +2,9 @@ pub mod player_control;
 
 use std::f32::consts::PI;
 
-use bevy::{prelude::{*, shape::Box}, render::{mesh::Indices, render_resource::PrimitiveTopology}, pbr::CascadeShadowConfigBuilder};
-use bevy::utils::HashMap;
+use bevy::prelude::*;
+use bevy::pbr::CascadeShadowConfigBuilder;
+
 
 use crate::{systems::{player::player_control::{MovementSettings, KeyBindings, JumpTimer, setup_player, InputState, initial_grab_cursor, player_move, player_look, cursor_grab}, world_generation::generate_world}, utils::point::Point3D, world::{GameWorld, block::GameBlockType, chunk::GameChunk}, settings::CHUNK_SIZE};
 

@@ -85,8 +85,6 @@ impl GameChunk {
     fn render_naive(&self, mesh_manager: &mut ResMut<Assets<Mesh>>, block_material_mapping: &Res<BlockMaterialMap>) -> (Vec<PbrBundle>, u32) {
         let mut bundles = Vec::new();
 
-        info!("Inserting cubes in the world");
-
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         let mut indices: Vec<u32> = vec![];
         let mut total_nb_faces = 0;
