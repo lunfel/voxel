@@ -6,19 +6,12 @@ use bevy::render::mesh::{Indices, PrimitiveTopology};
 
 use crate::{settings::CHUNK_SIZE, utils::point::Point3D};
 use crate::systems::world_generation::{BlockMaterialHashMap, BlockMaterialMap};
-use crate::world::block::GameBlockType;
+use crate::world::block::{BlockCoord, GameBlockType};
 
 use super::block::GameBlock;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Deref, Clone, PartialEq, Eq, Hash)]
 pub struct ChunkCoord(Point3D<usize>);
-
-impl Deref for ChunkCoord {
-    type Target = Point3D<usize>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl From<Point3D<usize>> for ChunkCoord {
     fn from(value: Point3D<usize>) -> Self {
@@ -57,6 +50,8 @@ pub struct GameChunk {
     block_entities: Vec<Entity>
 }
 
+type VertexBuffer = Vec<([f32; 3], [f32; 3], [f32; 2])>;
+
 impl GameChunk {
     pub fn new(chunk_coord: ChunkCoord) -> Self {
         Self {
@@ -75,56 +70,16 @@ impl GameChunk {
 
     pub fn render_chunk(&self, mesh_manager: &mut ResMut<Assets<Mesh>>, block_material_mapping: &Res<BlockMaterialMap>) -> (Vec<PbrBundle>, u32) {
         self.render_naive(mesh_manager, block_material_mapping)
+    }
 
-        // for (coord, block) in self.blocks.blocks_with_coord() {
-        //     if let Some(block) = self.get_block(&coord) {
-        //         if (block.block_type != GameBlockType::Empty) {
-        //             let start_block_type = block.block_type;
-        //
-        //             let mut end_block_y: Option<Point3D<i8>> = None;
-        //             let mut end_block_z: Option<Point3D<i8>> = None;
-        //
-        //             let mut next_x = coord;
-        //
-        //             loop {
-        //                 next_x = next_x.right_neighbor();
-        //                 let maybe_block_x = self.get_block(&next_x);
-        //
-        //                 if let Some(block_x) = maybe_block_x {
-        //                     if block_x.block_type == start_block_type {
-        //                         // Don't break
-        //                     } else {
-        //                         break;
-        //                     }
-        //                 } else {
-        //                     break;
-        //                 }
-        //             }
-        //
-        //             let end_block_x = next_x;
-        //
-        //             loop {
-        //                 // check that each lines of blocks are the same type between start_x and end_x for each y
-        //             }
-        //
-        //             loop {
-        //                 // check that each plane of block are the same type between start_x, start_y, end_x and end_y
-        //             }
-        //
-        //
-        //
-        //
-        //
-        //             break;
-        //         }
-        //     } else {
-        //
-        //     }
-        // }
-        //
-        // let mesh =  todo!();
-        //
-        // RenderedGameChunk::new(self, mesh)
+    fn render_single_mesh() -> (PbrBundle, u32) {
+        for x in 0..CHUNK_SIZE {
+            for y in 0..CHUNK_SIZE {
+                for z in 0..CHUNK_SIZE {}
+            }
+        }
+
+        todo!()
     }
 
     fn render_naive(&self, mesh_manager: &mut ResMut<Assets<Mesh>>, block_material_mapping: &Res<BlockMaterialMap>) -> (Vec<PbrBundle>, u32) {
@@ -132,35 +87,26 @@ impl GameChunk {
 
         info!("Inserting cubes in the world");
 
-        let mut nb_triangles = 0;
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        let mut indices: Vec<u32> = vec![];
+        let mut total_nb_faces = 0;
+        let mut vertices: VertexBuffer = vec![];
 
         for x in 0..CHUNK_SIZE {
             for y in 0..CHUNK_SIZE {
                 for z in 0..CHUNK_SIZE {
-                    let block_coord: Point3D<usize> = (x, y, z).into();
+                    let block_coord: BlockCoord = (x, y, z).into();
                     if let Some(block) = self.get_block(&block_coord) {
                         match block.block_type {
                             GameBlockType::Empty => (),
                             _ => {
-                                if let Some((mesh, nb_faces)) = create_custom_cube(&(x as i8, y as i8, z as i8), &self) {
-                                    nb_triangles += nb_faces;
-                                    let mesh_handle = mesh_manager.add(mesh);
-                                    bundles.push(PbrBundle {
-                                        mesh: mesh_handle.clone(),
-                                        material: block_material_mapping.get(&block.block_type).unwrap().clone(),
-                                        transform: Transform::from_xyz(
-                                            x as f32 + self.chunk_coord.x as f32 * CHUNK_SIZE as f32,
-                                            y as f32 + self.chunk_coord.y as f32 * CHUNK_SIZE as f32,
-                                            z as f32 + self.chunk_coord.z as f32 * CHUNK_SIZE as f32
-                                        ),
-                                        ..default()
-                                    });
+                                create_custom_cube(&(x, y, z), &self, &mut mesh, &mut indices, &mut total_nb_faces, &mut vertices);
+
                                     // Collider::cuboid(0.5, 0.5, 0.5),
                                     // Friction {
                                     //     coefficient: 0.0,
                                     //     combine_rule: CoefficientCombineRule::Min
                                     // }));
-                                }
                             }
                             _ => ()
                         }
@@ -169,39 +115,58 @@ impl GameChunk {
             }
         }
 
-        nb_triangles *= 2;
+        let positions: Vec<_> = vertices.iter().map(|(p, _, _)| *p).collect();
+        let normals: Vec<_> = vertices.iter().map(|(_, n, _)| *n).collect();
+        let uvs: Vec<_> = vertices.iter().map(|(_, _, uv)| *uv).collect();
 
-        (bundles, nb_triangles)
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+
+        let indices = Indices::U32(indices);
+
+        mesh.set_indices(Some(indices));
+
+        let mesh_handle = mesh_manager.add(mesh);
+
+        bundles.push(PbrBundle {
+            mesh: mesh_handle.clone(),
+            material: block_material_mapping.get(&GameBlockType::Ground).unwrap().clone(),
+            transform: Transform::from_xyz(
+                (self.chunk_coord.x * CHUNK_SIZE) as f32,
+                (self.chunk_coord.y * CHUNK_SIZE) as f32,
+                (self.chunk_coord.z * CHUNK_SIZE) as f32
+            ),
+            ..default()
+        });
+
+        (bundles, total_nb_faces * 2)
     }
 
-    pub fn get_block<P>(&self, maybe_into_coord: &P) -> Option<&GameBlock>
-    where P: TryInto<Point3D<usize>> + Clone
+    pub fn get_block<P>(&self, into_coord: &P) -> Option<&GameBlock>
+    where P: Into<BlockCoord> + Clone
     {
-        let res: Result<Point3D<usize>, _> = (*maybe_into_coord).clone().try_into();
+        let coord: BlockCoord = (*into_coord).clone().into();
 
-        if let Ok(coord) = res {
-            self.blocks.get(coord.x)
-                .and_then(|blocks_y| blocks_y.get(coord.y)
-                    .and_then(|blocks_z| blocks_z.get(coord.z))
-                )
-        } else {
-            None
-        }
+        self.blocks.get(coord.x)
+            .and_then(|blocks_y| blocks_y.get(coord.y)
+                .and_then(|blocks_z| blocks_z.get(coord.z))
+            )
     }
 }
 
-fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk) -> Option<(Mesh, u32)>
-    where P: Into<Point3D<i8>> + Clone
+fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk, mesh: &mut Mesh, indices: &mut Vec<u32>, total_nb_faces: &mut u32, vertices: &mut VertexBuffer)
+    where P: Into<BlockCoord> + Clone
 {
-    let coord: Point3D<i8> = (*into_coord).clone().into();
+    let coord: BlockCoord = (*into_coord).clone().into();
     // suppose Y-up right hand, and camera look from +z to -z
     let sp = shape::Box::new(1.0, 1.0, 1.0);
 
-    let mut vertices: Vec<([f32; 3], [f32; 3], [f32; 2])> = vec![];
-    let mut indices: Vec<u32> = vec![];
+    // let mut vertices: Vec<([f32; 3], [f32; 3], [f32; 2])> = vec![];
+    // let mut indices: Vec<u32> = vec![];
 
     let indices_template = [0, 1, 2, 2, 3, 0];
-    let mut nb_faces: u32 = 0;
+    // let mut nb_faces: u32 = 0;
 
     let faces: [_; 6] = [
         (
@@ -261,49 +226,46 @@ fn create_custom_cube<P>(into_coord: &P, chunk: &GameChunk) -> Option<(Mesh, u32
         )
     ];
 
+    let block_offset: [f32; 3] = [
+        coord.x as f32,
+        coord.y as f32,
+        coord.z as f32
+    ];
+
     for (coord, attributes) in faces.iter() {
-        if let Some(cmp_block) = chunk.get_block(coord) {
-            if cmp_block.block_type == GameBlockType::Empty {
-                attributes.iter()
-                    .for_each(|attribute| {
-                        vertices.push(*attribute)
-                    });
-
-                indices_template.iter()
-                    .map(|i| i + nb_faces * 4)
-                    .for_each(|i| indices.push(i));
-
-                nb_faces += 1;
+        let mut should_render_face = true;
+        if let Some(coord) = coord {
+            if let Some(cmp_block) = chunk.get_block(coord) {
+                if cmp_block.block_type != GameBlockType::Empty {
+                    should_render_face = false;
+                }
             }
-        } else {
+        }
+
+        if should_render_face {
             attributes.iter()
-                .for_each(|attribute| {
-                    vertices.push(*attribute)
+                .for_each(|(position, normals, uv)| {
+                    let v: [f32; 3] = position.iter()
+                        .zip(block_offset)
+                        .into_iter()
+                        .map(|(v, offset)| v + offset)
+                        .collect::<Vec<_>>()
+                        .try_into()
+                        .unwrap();
+
+                    vertices.push((
+                        v,
+                        *normals,
+                        *uv
+                        ))
                 });
 
             indices_template.iter()
-                .map(|i| i + nb_faces * 4)
+                .map(|i| i + (*total_nb_faces) * 4)
                 .for_each(|i| indices.push(i));
 
-            nb_faces += 1;
+            *total_nb_faces += 1;
         }
     }
-
-    if nb_faces == 0 {
-        return None
-    }
-
-    let positions: Vec<_> = vertices.iter().map(|(p, _, _)| *p).collect();
-    let normals: Vec<_> = vertices.iter().map(|(_, n, _)| *n).collect();
-    let uvs: Vec<_> = vertices.iter().map(|(_, _, uv)| *uv).collect();
-
-    let indices = Indices::U32(indices);
-
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-    mesh.set_indices(Some(indices));
-    Some((mesh, nb_faces))
 }
 

@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::prelude::shape::Cube;
 use bevy::utils::hashbrown::HashMap;
 use noise::{NoiseFn, Perlin};
 
@@ -92,8 +93,8 @@ pub fn generate_world(
 
     let mut total_triangles = 0;
 
-    for x in 0..8 {
-        for z in 0..8 {
+    for x in 0..30 {
+        for z in 0..30 {
             let point: ChunkCoord = (x as usize, 0 as usize, z as usize).into();
             let mut chunk = generate_single_chunk(&point);
 

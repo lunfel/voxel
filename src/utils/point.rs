@@ -5,49 +5,69 @@ pub struct Point3D<T> {
     pub z: T
 }
 
-impl Point3D<i8> {
-    pub fn front_neighbor(&self) -> Self {
-        Self {
-            z: self.z + 1,
-            ..*self
-        }
-    }
+macro_rules! point_neighbour_impl {
+    ($t:ty) => {
+        impl Point3D<$t> {
+            pub fn front_neighbor(&self) -> Option<Self> {
+                self.z.checked_add(1)
+                    .map(|z| Self {
+                            z,
+                            ..*self
+                        }
+                    )
+            }
 
-    pub fn back_neighbor(&self) -> Self {
-        Self {
-            z: self.z - 1,
-            ..*self
-        }
-    }
+            pub fn back_neighbor(&self) -> Option<Self> {
+                self.z.checked_sub(1)
+                    .map(|z| Self {
+                            z,
+                            ..*self
+                        }
+                    )
+            }
 
-    pub fn left_neighbor(&self) -> Self {
-        Self {
-            x: self.x - 1,
-            ..*self
-        }
-    }
+            pub fn right_neighbor(&self) -> Option<Self> {
+                self.x.checked_add(1)
+                    .map(|x| Self {
+                            x,
+                            ..*self
+                        }
+                    )
+            }
 
-    pub fn right_neighbor(&self) -> Self {
-        Self {
-            x: self.x + 1,
-            ..*self
-        }
-    }
+            pub fn left_neighbor(&self) -> Option<Self> {
+                self.x.checked_sub(1)
+                    .map(|x| Self {
+                            x,
+                            ..*self
+                        }
+                    )
+            }
 
-    pub fn top_neighbor(&self) -> Self {
-        Self {
-            y: self.y + 1,
-            ..*self
-        }
-    }
+            pub fn top_neighbor(&self) -> Option<Self> {
+                self.y.checked_add(1)
+                    .map(|y| Self {
+                            y,
+                            ..*self
+                        }
+                    )
+            }
 
-    pub fn bottom_neighbor(&self) -> Self {
-        Self {
-            x: self.x - 1,
-            ..*self
+            pub fn bottom_neighbor(&self) -> Option<Self> {
+                self.y.checked_sub(1)
+                    .map(|y| Self {
+                            y,
+                            ..*self
+                        }
+                    )
+            }
         }
-    }
+    };
 }
+
+point_neighbour_impl!(u8);
+point_neighbour_impl!(usize);
+point_neighbour_impl!(i8);
 
 impl From<Point3D<usize>> for Point3D<i8> {
     fn from(value: Point3D<usize>) -> Self {
