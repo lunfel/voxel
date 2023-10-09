@@ -16,7 +16,8 @@ fn main() {
     App::new()
         .init_resource::<GameParameters>()
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugins(RapierDebugRenderPlugin::default())
+        // This slows down the game by a lot
+        // .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldGenerationPlugin)
         .add_plugins(PlayerPlugin)

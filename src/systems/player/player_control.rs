@@ -1,7 +1,7 @@
 use std::ops::{DerefMut, Deref};
 
 use bevy::{prelude::*, window::{CursorGrabMode, PrimaryWindow}, input::mouse::MouseMotion, ecs::event::ManualEventReader, time::Stopwatch, app::AppExit};
-use bevy_rapier3d::prelude::{RigidBody, Collider, KinematicCharacterController, KinematicCharacterControllerOutput, CharacterLength};
+use bevy_rapier3d::prelude::{RigidBody, Collider, KinematicCharacterController, KinematicCharacterControllerOutput, CharacterLength, Friction, CoefficientCombineRule};
 
 use crate::settings::CHUNK_SIZE;
 
@@ -110,9 +110,15 @@ pub fn setup_player(
             },
             ..default()
         },
+        Friction {
+            coefficient: 0.0,
+            combine_rule: CoefficientCombineRule::Min
+        },
         RigidBody::KinematicPositionBased,
         // @todo: change to capsule, might resolve the turn-pushback from physics?
-        Collider::cuboid(0.5, 1.65, 0.5),
+        // Collider::cuboid(0.5, 1.65, 0.5),
+        // Collider::capsule_y(1.65, 0.5),
+        Collider::cylinder(1.65, 0.5),
         KinematicCharacterController {
             snap_to_ground: Some(CharacterLength::Relative(0.5)),
             ..default()
@@ -198,19 +204,17 @@ pub fn player_move(
                 }
             }
 
-            let final_vel = move_velocity;
+            let mut v0_y = player_state.last_velocity * Vec3::Y;
 
-            // let mut v0_y = player_state.last_velocity * Vec3::Y;
-            //
-            // let final_vel = move_velocity + if just_started_jumping {
-            //     // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
-            //     Vec3::new(0.0, jump_vel, 0.0)
-            // } else {
-            //     let grav = Vec3::new(0.0, 0.0, 0.0);
-            //     let delta = time.delta_seconds();
-            //     // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
-            //     v0_y + grav * delta
-            // };
+            let final_vel = move_velocity + if just_started_jumping {
+                // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
+                Vec3::new(0.0, jump_vel, 0.0)
+            } else {
+                let grav = Vec3::new(0.0, -9.81, 0.0);
+                let delta = time.delta_seconds();
+                // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
+                v0_y + grav * delta
+            };
 
             player_state.last_velocity = final_vel;
 

@@ -123,7 +123,7 @@ pub fn generate_world(
 ) {
     info!("Generate world chunks");
 
-    let dimension = 1;
+    let dimension = 4;
 
     for x in 0..dimension {
         for z in 0..dimension {
@@ -148,15 +148,11 @@ pub fn generate_world(
                     for z in 0..game_parameters.chunk_size {
                         if let Some(block) = chunk.get_block(&(x, y, z)) {
                             if !block.is_fully_surrounded && block.block_type != GameBlockType::Empty {
-                                info!("Adding collider for {},{},{}", x, y, z);
-
                                 let block_transform = Transform::from_xyz(
                                     (chunk_coord.x * game_parameters.chunk_size + x) as f32,
                                     (chunk_coord.y * game_parameters.chunk_size + y) as f32,
                                     (chunk_coord.z * game_parameters.chunk_size + z) as f32
                                 );
-
-                                info!("Transform: {:?}", block_transform);
 
                                 commands.spawn((
                                     block_transform,

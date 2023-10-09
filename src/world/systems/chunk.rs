@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology, VertexAttributeValues};
+use bevy::render::primitives::Aabb;
 use bevy::utils::HashMap;
 use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::{ColliderBuilder, InteractionGroups};
@@ -44,19 +45,30 @@ pub fn debug_collider_counts(
 }
 
 pub fn enable_close_colliders(
-    mut chunk_query: Query<(Entity, &mut GameChunk, &Transform), (With<Collider>, With<ColliderDisabled>)>,
-    mut player_query: Query<&Transform, With<PlayerControl>>,
+    // mut chunk_query: Query<(&Transform, &mut Collider), With<ColliderDisabled>>,
+    // mut player_query: Query<&Transform, With<PlayerControl>>,
+    rapier_context: Res<RapierContext>,
     mut commands: Commands
 ) {
-    for (chunk_entity, chunk, chunk_transform) in chunk_query.iter() {
-        for player_transform in player_query.iter() {
-            if chunk_transform.translation.distance(player_transform.translation) < (CHUNK_SIZE as f32 * 1.5) {
-                commands.entity(chunk_entity).remove::<ColliderDisabled>();
+    let aabb = Aabb::from_min_max(Vec3::new(-800.0, -800.0, -800.0), Vec3::new(800.0, 800.0, 800.0));
+    rapier_context.colliders_with_aabb_intersecting_aabb(aabb, |entity| {
+        println!("The entity {:?} has an AABB intersecting our test AABB", entity);
 
-                info!("Enabled chunk collider at {}", chunk_transform.translation);
-            }
-        }
-    }
+        commands.entity(entity)
+            .remove::<ColliderDisabled>();
+
+        true // Return `false` instead if we want to stop searching for other colliders that contain this point.
+    });
+
+    // for (chunk_entity, chunk, chunk_transform) in chunk_query.iter() {
+    //     for player_transform in player_query.iter() {
+    //         if chunk_transform.translation.distance(player_transform.translation) < (CHUNK_SIZE as f32 * 1.5) {
+    //             commands.entity(chunk_entity).remove::<ColliderDisabled>();
+    //
+    //             info!("Enabled chunk collider at {}", chunk_transform.translation);
+    //         }
+    //     }
+    // }
 }
 
 pub fn disable_far_colliders(
