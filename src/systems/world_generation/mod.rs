@@ -78,7 +78,11 @@ where P: Into<ChunkCoord> + Clone
                                 is_fully_surrounded = false;
                                 break;
                             }
+                        } else {
+                            is_fully_surrounded = false;
                         }
+                    } else {
+                        is_fully_surrounded = false;
                     }
                 }
 
@@ -139,14 +143,11 @@ pub fn generate_world(
 
             let mesh_handle = mesh_manager.add(mesh);
 
-            let max_colliders = 10;
-            let mut nb_colliders = 0;
-
-            'main_loop: for x in 0..game_parameters.chunk_size {
+            for x in 0..game_parameters.chunk_size {
                 for y in 0..game_parameters.chunk_size {
                     for z in 0..game_parameters.chunk_size {
                         if let Some(block) = chunk.get_block(&(x, y, z)) {
-                            if !block.is_fully_surrounded {
+                            if !block.is_fully_surrounded && block.block_type != GameBlockType::Empty {
                                 info!("Adding collider for {},{},{}", x, y, z);
 
                                 let block_transform = Transform::from_xyz(
@@ -159,19 +160,14 @@ pub fn generate_world(
 
                                 commands.spawn((
                                     block_transform,
-                                    RigidBody::Fixed,
                                     Collider::cuboid(0.5, 0.5, 0.5),
-                                    // Friction {
-                                    //     coefficient: 0.0,
-                                    //     combine_rule: CoefficientCombineRule::Min
-                                    // }
+                                    RigidBody::Fixed,
+                                    GlobalTransform::default(),
+                                    Friction {
+                                        coefficient: 0.0,
+                                        combine_rule: CoefficientCombineRule::Min
+                                    }
                                 ));
-
-                                nb_colliders += 1;
-
-                                if nb_colliders >= max_colliders {
-                                    break 'main_loop;
-                                }
                             }
                         }
                     }

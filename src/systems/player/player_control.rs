@@ -49,6 +49,8 @@ pub struct KeyBindings {
     pub move_backward: KeyCode,
     pub move_left: KeyCode,
     pub move_right: KeyCode,
+    pub move_downward: KeyCode,
+    pub move_upward: KeyCode,
     pub jump: KeyCode,
 }
 
@@ -60,6 +62,8 @@ impl Default for KeyBindings {
             move_backward: KeyCode::S,
             move_left: KeyCode::A,
             move_right: KeyCode::D,
+            move_downward: KeyCode::Q,
+            move_upward: KeyCode::E,
             jump: KeyCode::Space
         }
     }
@@ -130,8 +134,10 @@ pub fn player_move(
         for (transform, mut character_controller, character_output, mut player_state) in query.iter_mut() {
             let mut move_velocity = Vec3::ZERO;
             let local_z = transform.local_z();
+            let local_y = transform.local_y();
             let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
             let right = Vec3::new(local_z.z, 0.0, -local_z.x);
+            let upward = Vec3::new(0.0, local_y.y, 0.0);
             // let jump = Vec3::new(0.0, 2.0, 0.0);
             let jump_vel = 5.0;
             let mut just_started_jumping = false;
@@ -165,7 +171,11 @@ pub fn player_move(
                             move_velocity -= right;
                         } else if key == key_bindings.move_right {
                             move_velocity += right;
-                        } 
+                        } else if key == key_bindings.move_downward {
+                            move_velocity -= upward;
+                        } else if key == key_bindings.move_upward {
+                            move_velocity += upward;
+                        }
                     }
                 } 
             }
@@ -188,17 +198,19 @@ pub fn player_move(
                 }
             }
 
-            let mut v0_y = player_state.last_velocity * Vec3::Y;
+            let final_vel = move_velocity;
 
-            let final_vel = move_velocity + if just_started_jumping {
-                // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
-                Vec3::new(0.0, jump_vel, 0.0)
-            } else {
-                let grav = Vec3::new(0.0, 0.0, 0.0);
-                let delta = time.delta_seconds();
-                // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
-                v0_y + grav * delta
-            };
+            // let mut v0_y = player_state.last_velocity * Vec3::Y;
+            //
+            // let final_vel = move_velocity + if just_started_jumping {
+            //     // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
+            //     Vec3::new(0.0, jump_vel, 0.0)
+            // } else {
+            //     let grav = Vec3::new(0.0, 0.0, 0.0);
+            //     let delta = time.delta_seconds();
+            //     // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
+            //     v0_y + grav * delta
+            // };
 
             player_state.last_velocity = final_vel;
 
