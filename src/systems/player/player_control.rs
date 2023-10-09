@@ -37,7 +37,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.00012,
-            speed: 50.0 // Used to be 5
+            speed: 12.0 // Used to be 5
         }
     }
 }
@@ -107,6 +107,7 @@ pub fn setup_player(
             ..default()
         },
         RigidBody::KinematicPositionBased,
+        // @todo: change to capsule, might resolve the turn-pushback from physics?
         Collider::cuboid(0.5, 1.65, 0.5),
         KinematicCharacterController {
             snap_to_ground: Some(CharacterLength::Relative(0.5)),
@@ -132,7 +133,7 @@ pub fn player_move(
             let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
             let right = Vec3::new(local_z.z, 0.0, -local_z.x);
             // let jump = Vec3::new(0.0, 2.0, 0.0);
-            let jump_vel = 3.0;
+            let jump_vel = 5.0;
             let mut just_started_jumping = false;
             // Approximativement 53m/s en chute libre dans les airs
 
@@ -193,7 +194,7 @@ pub fn player_move(
                 // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
                 Vec3::new(0.0, jump_vel, 0.0)
             } else {
-                let grav = Vec3::new(0.0, -0.0001, 0.0);
+                let grav = Vec3::new(0.0, 0.0, 0.0);
                 let delta = time.delta_seconds();
                 // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
                 v0_y + grav * delta

@@ -1,5 +1,5 @@
 #[derive(Default, PartialEq, Eq, Hash, Clone)]
-pub struct Point3D<T> {
+pub struct Point3D<T: Copy> {
     pub x: T,
     pub y: T,
     pub z: T
@@ -61,6 +61,17 @@ macro_rules! point_neighbour_impl {
                         }
                     )
             }
+
+            pub fn neighbors(&self) -> [Option<Self>; 6] {
+                [
+                    self.front_neighbor(),
+                    self.back_neighbor(),
+                    self.right_neighbor(),
+                    self.left_neighbor(),
+                    self.top_neighbor(),
+                    self.bottom_neighbor()
+                ]
+            }
         }
     };
 }
@@ -94,7 +105,7 @@ impl TryFrom<Point3D<i8>> for Point3D<usize> {
     }
 }
 
-impl<T> From<(T, T, T)> for Point3D<T> {
+impl<T: Copy> From<(T, T, T)> for Point3D<T> {
     fn from(value: (T, T, T)) -> Self {
         Self { x: value.0, y: value.1, z: value.2 }
     }

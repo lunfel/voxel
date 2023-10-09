@@ -7,13 +7,14 @@ mod screen;
 use bevy::{prelude::*, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
 use systems::{world_generation::WorldGenerationPlugin, player::PlayerPlugin};
 use bevy_rapier3d::prelude::*;
-use world::GameWorld;
 use crate::screen::ScreenPlugin;
+use crate::settings::GameParameters;
 use crate::systems::world_generation::BlockMaterialMap;
+use crate::world::WorldPlugin;
 
 fn main() {
     App::new()
-        .init_resource::<GameWorld>()
+        .init_resource::<GameParameters>()
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(DefaultPlugins)
@@ -23,6 +24,7 @@ fn main() {
         .add_systems(Startup, setup_physics)
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        .add_plugins(WorldPlugin)
         // .add_plugins(WorldInspectorPlugin::new())
         .init_resource::<BlockMaterialMap>()
         .run();

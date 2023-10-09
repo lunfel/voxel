@@ -10,6 +10,8 @@ fn toggle_fullscreen(
 
 impl Plugin for ScreenPlugin {
     fn build(&self, app: &mut App) {
+        info!("ScreenPlugin initializing");
         app.add_systems(Startup, toggle_fullscreen);
+        info!("ScreenPlugin loaded");
     }
 }

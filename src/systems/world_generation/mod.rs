@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 use bevy::utils::hashbrown::HashMap;
 use noise::{NoiseFn, Perlin};
+use bevy_rapier3d::prelude::*;
 
-use crate::{settings::CHUNK_SIZE, world::{block::GameBlockType, chunk::GameChunk, GameWorld}};
+use crate::{settings::CHUNK_SIZE, world::{block::GameBlockType, chunk::GameChunk}};
+use crate::settings::GameParameters;
+use crate::world::block::BlockCoord;
 use crate::world::chunk::ChunkCoord;
+use crate::world::systems::chunk::render_chunk;
 
 #[derive(Resource)]
 pub struct WorldGenerationState {
@@ -22,10 +26,11 @@ pub struct WorldGenerationPlugin;
 
 impl Plugin for WorldGenerationPlugin {
     fn build(&self, app: &mut App) {
-        info!("WorldGenerationPlugin");
+        info!("WorldGenerationPlugin initializing");
         app
             .init_resource::<WorldGenerationState>()
             .add_systems(Startup, generate_world);
+        info!("WorldGenerationPlugin loaded");
     }
 }
 
@@ -36,7 +41,7 @@ where P: Into<ChunkCoord> + Clone
     let ground_layer_perlin = Perlin::new(2);
     let coord: ChunkCoord = (*coord).clone().into();
 
-    let mut game_chunk = GameChunk::new(coord.clone());
+    let mut game_chunk = GameChunk::new();
 
     for x in 0..CHUNK_SIZE {
        for y in 0..CHUNK_SIZE {
@@ -49,15 +54,39 @@ where P: Into<ChunkCoord> + Clone
                 let height = (height_value * 6.0).round() as usize + 1;
 
                 if height == y {
-                    game_chunk.blocks[x][y][z].block_type = match ground_layer_perlin.get([px, pz]) {
-                        0.5..=1.0 => GameBlockType::Rock,
-                        _ => GameBlockType::Ground
+                    game_chunk.blocks[x][y][z].block_type = if ground_layer_perlin.get([px, pz]) > 0.5 {
+                        GameBlockType::Rock
+                    } else {
+                        GameBlockType::Ground
                     }
                 } else if height > y {
                     game_chunk.blocks[x][y][z].block_type = GameBlockType::Rock
                 }
             }
         } 
+    }
+
+    for x in 0..CHUNK_SIZE {
+        for y in 0..CHUNK_SIZE {
+            for z in 0..CHUNK_SIZE {
+                let block_coord: BlockCoord = (x, y, z).into();
+                let mut is_fully_surrounded = true;
+                for maybe_neighbor_coord in block_coord.neighbors() {
+                    if let Some(neighbor_coord) = maybe_neighbor_coord {
+                        if let Some (neighbor_block) = game_chunk.get_block(&neighbor_coord) {
+                            if neighbor_block.block_type == GameBlockType::Empty {
+                                is_fully_surrounded = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                game_chunk.update_block(&block_coord, |b| {
+                    b.is_fully_surrounded = is_fully_surrounded;
+                });
+            }
+        }
     }
 
     game_chunk
@@ -82,45 +111,81 @@ impl FromWorld for BlockMaterialMap {
 }
 
 pub fn generate_world(
-    mut game_world: ResMut<GameWorld>,
     mut world_generation_state: ResMut<WorldGenerationState>,
-    mut mesh_manager: ResMut<Assets<Mesh>>,
     block_material_map: Res<BlockMaterialMap>,
+    game_parameters: Res<GameParameters>,
+    mut mesh_manager: ResMut<Assets<Mesh>>,
     mut commands: Commands
 ) {
     info!("Generate world chunks");
 
-    let mut total_triangles = 0;
+    let dimension = 1;
 
-    for x in 0..50 {
-        for z in 0..50 {
-            let point: ChunkCoord = (x as usize, 0 as usize, z as usize).into();
-            let mut chunk = generate_single_chunk(&point);
+    for x in 0..dimension {
+        for z in 0..dimension {
+            let chunk_coord: ChunkCoord = (x as usize, 0 as usize, z as usize).into();
 
-            let (pbrs, nb_triangles) = chunk.render_chunk(&mut mesh_manager, &block_material_map);
-
-            total_triangles += nb_triangles;
-
-            let entities: Vec<_> = pbrs.into_iter()
-                .map(|pbr| {
-                    commands.spawn(pbr).id()
-                })
-                .collect();
-
-            chunk.replace_block_entities(entities)
-                .into_iter()
-                .for_each(|_old_entity| {
-                    // todo: remove old entities
-                });
-
-            game_world.chunks.insert(
-                point,
-                chunk
+            let transform = Transform::from_xyz(
+                (chunk_coord.x * game_parameters.chunk_size) as f32,
+                (chunk_coord.y * game_parameters.chunk_size) as f32,
+                (chunk_coord.z * game_parameters.chunk_size) as f32
             );
+
+            info!("Spawning chunks");
+
+            let chunk = generate_single_chunk(&chunk_coord);
+
+            let mesh = render_chunk(&game_parameters, &chunk);
+
+            let mesh_handle = mesh_manager.add(mesh);
+
+            let max_colliders = 10;
+            let mut nb_colliders = 0;
+
+            'main_loop: for x in 0..game_parameters.chunk_size {
+                for y in 0..game_parameters.chunk_size {
+                    for z in 0..game_parameters.chunk_size {
+                        if let Some(block) = chunk.get_block(&(x, y, z)) {
+                            if !block.is_fully_surrounded {
+                                info!("Adding collider for {},{},{}", x, y, z);
+
+                                let block_transform = Transform::from_xyz(
+                                    (chunk_coord.x * game_parameters.chunk_size + x) as f32,
+                                    (chunk_coord.y * game_parameters.chunk_size + y) as f32,
+                                    (chunk_coord.z * game_parameters.chunk_size + z) as f32
+                                );
+
+                                info!("Transform: {:?}", block_transform);
+
+                                commands.spawn((
+                                    block_transform,
+                                    RigidBody::Fixed,
+                                    Collider::cuboid(0.5, 0.5, 0.5),
+                                    // Friction {
+                                    //     coefficient: 0.0,
+                                    //     combine_rule: CoefficientCombineRule::Min
+                                    // }
+                                ));
+
+                                nb_colliders += 1;
+
+                                if nb_colliders >= max_colliders {
+                                    break 'main_loop;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            commands.spawn((PbrBundle {
+                transform,
+                mesh: mesh_handle,
+                material: block_material_map.get(&GameBlockType::Ground).unwrap().clone(),
+                ..default()
+            }, chunk, chunk_coord));
         }
     }
-
-    info!("Total Rendered triangles: {}", total_triangles);
 
     world_generation_state.finished_generating = true;
 }

@@ -12,7 +12,8 @@ pub enum GameBlockType {
 
 #[derive(Default, Copy, Clone)]
 pub struct GameBlock {
-    pub block_type: GameBlockType
+    pub block_type: GameBlockType,
+    pub is_fully_surrounded: bool
 }
 
 /// Block coordinate inside a chunk
