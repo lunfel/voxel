@@ -4,7 +4,8 @@ use noise::{NoiseFn, Perlin};
 use bevy_rapier3d::prelude::*;
 
 use crate::{settings::CHUNK_SIZE, world::{block::GameBlockType, chunk::GameChunk}};
-use crate::settings::GameParameters;
+use crate::settings::{CoordSystemIntegerSize, GameParameters};
+use crate::utils::point::Point3D;
 use crate::world::block::BlockCoord;
 use crate::world::chunk::ChunkCoord;
 use crate::world::systems::chunk::render_chunk;
@@ -123,11 +124,14 @@ pub fn generate_world(
 ) {
     info!("Generate world chunks");
 
-    let dimension = 4;
+    // Let's assume player is at 0,0,0 for now
 
-    for x in 0..dimension {
-        for z in 0..dimension {
-            let chunk_coord: ChunkCoord = (x as usize, 0 as usize, z as usize).into();
+    let player_position: Point3D<i32> = Point3D::default();
+    let dimension = 2;
+
+    for x in player_position.x - dimension..player_position.x + dimension {
+        for z in player_position.z - dimension..player_position.z + dimension {
+            let chunk_coord: ChunkCoord = (x as CoordSystemIntegerSize, 0 as CoordSystemIntegerSize, z as CoordSystemIntegerSize).into();
 
             let transform = Transform::from_xyz(
                 (chunk_coord.x * game_parameters.chunk_size) as f32,

@@ -1,21 +1,22 @@
 use bevy::prelude::*;
 
 use crate::{settings::CHUNK_SIZE, utils::point::Point3D};
+use crate::settings::CoordSystemIntegerSize;
 use crate::world::block::BlockCoord;
 
 use super::block::GameBlock;
 
 #[derive(Deref, Clone, PartialEq, Eq, Hash, Component)]
-pub struct ChunkCoord(Point3D<usize>);
+pub struct ChunkCoord(Point3D<CoordSystemIntegerSize>);
 
-impl From<Point3D<usize>> for ChunkCoord {
-    fn from(value: Point3D<usize>) -> Self {
+impl From<Point3D<CoordSystemIntegerSize>> for ChunkCoord {
+    fn from(value: Point3D<CoordSystemIntegerSize>) -> Self {
         Self(value)
     }
 }
 
-impl From<(usize, usize, usize)> for ChunkCoord {
-    fn from(value: (usize, usize, usize)) -> Self {
+impl From<(CoordSystemIntegerSize, CoordSystemIntegerSize, CoordSystemIntegerSize)> for ChunkCoord {
+    fn from(value: (CoordSystemIntegerSize, CoordSystemIntegerSize, CoordSystemIntegerSize)) -> Self {
         Self(Point3D::from(value))
     }
 }
@@ -67,9 +68,9 @@ impl GameChunk {
     {
         let coord: BlockCoord = (*into_coord).clone().into();
 
-        self.blocks.get(coord.x)
-            .and_then(|blocks_y| blocks_y.get(coord.y)
-                .and_then(|blocks_z| blocks_z.get(coord.z))
+        self.blocks.get(coord.x as usize)
+            .and_then(|blocks_y| blocks_y.get(coord.y as usize)
+                .and_then(|blocks_z| blocks_z.get(coord.z as usize))
             )
     }
 
@@ -78,9 +79,9 @@ impl GameChunk {
     {
         let coord: BlockCoord = (*into_coord).clone().into();
 
-        self.blocks.get_mut(coord.x)
-            .and_then(|blocks_y| blocks_y.get_mut(coord.y)
-                .and_then(|blocks_z| blocks_z.get_mut(coord.z))
+        self.blocks.get_mut(coord.x as usize)
+            .and_then(|blocks_y| blocks_y.get_mut(coord.y as usize)
+                .and_then(|blocks_z| blocks_z.get_mut(coord.z as usize))
             )
     }
 }

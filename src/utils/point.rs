@@ -1,3 +1,5 @@
+use crate::settings::CoordSystemIntegerSize;
+
 #[derive(Default, PartialEq, Eq, Hash, Clone)]
 pub struct Point3D<T: Copy> {
     pub x: T,
@@ -79,7 +81,7 @@ macro_rules! point_neighbour_impl {
 point_neighbour_impl!(u8);
 point_neighbour_impl!(usize);
 point_neighbour_impl!(i8);
-
+point_neighbour_impl!(CoordSystemIntegerSize);
 impl From<Point3D<usize>> for Point3D<i8> {
     fn from(value: Point3D<usize>) -> Self {
         Self {
