@@ -2,11 +2,16 @@ pub mod player_control;
 
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
 use bevy::pbr::CascadeShadowConfigBuilder;
+use bevy::prelude::*;
 
-
-use crate::{systems::{player::player_control::{MovementSettings, KeyBindings, JumpTimer, setup_player, InputState, initial_grab_cursor, player_move, player_look, cursor_grab}, world_generation::generate_world}};
+use crate::systems::{
+    player::player_control::{
+        cursor_grab, initial_grab_cursor, player_look, player_move, setup_player, InputState,
+        JumpTimer, KeyBindings, MovementSettings,
+    },
+    world_generation::generate_world,
+};
 
 pub struct PlayerPlugin;
 
@@ -28,9 +33,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn setup(
-    mut commands: Commands
-) {
+fn setup(mut commands: Commands) {
     info!("Inserting light in the world");
     commands.insert_resource(AmbientLight {
         brightness: 0.15,
@@ -61,4 +64,3 @@ fn setup(
         ..default()
     });
 }
-

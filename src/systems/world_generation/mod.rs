@@ -5,6 +5,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::{settings::CHUNK_SIZE, world::{block::GameBlockType, chunk::GameChunk}};
 use crate::settings::{CoordSystemIntegerSize, GameParameters};
+use crate::utils::fresh_entity::FreshEntity;
 use crate::utils::point::Point3D;
 use crate::world::block::BlockCoord;
 use crate::world::chunk::ChunkCoord;
@@ -174,12 +175,19 @@ pub fn generate_world(
                 }
             }
 
-            commands.spawn((PbrBundle {
+            let pbr = PbrBundle {
                 transform,
                 mesh: mesh_handle,
                 material: block_material_map.get(&GameBlockType::Ground).unwrap().clone(),
                 ..default()
-            }, chunk, chunk_coord));
+            };
+
+            commands.spawn((
+                pbr,
+                chunk,
+                chunk_coord,
+                FreshEntity::default()
+            ));
         }
     }
 

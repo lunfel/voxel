@@ -41,10 +41,3 @@ impl From<(usize, usize, usize)> for BlockCoord {
         })
     }
 }
-
-// impl TryFrom<Point3D<i8>> for BlockCoord {
-//     type Error = TryFromIntError;
-//     fn try_from(value: Point3D<i8>) -> Result<Self, Self::Error> {
-//         value.try_into().map(|p| BlockCoord(p))
-//     }
-// }

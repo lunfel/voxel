@@ -1,88 +1,31 @@
 use bevy::prelude::*;
-use bevy::render::mesh::{Indices, PrimitiveTopology, VertexAttributeValues};
-use bevy::render::primitives::Aabb;
-use bevy::utils::HashMap;
+use bevy::render::mesh::{Indices, PrimitiveTopology};
 use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::rapier::prelude::{ColliderBuilder, InteractionGroups};
-use crate::settings::{CHUNK_SIZE, GameParameters};
+
+use crate::settings::{CoordSystemIntegerSize, GameParameters};
 use crate::systems::player::player_control::PlayerControl;
 use crate::systems::world_generation::BlockMaterialMap;
+use crate::utils::cube::Cube;
 use crate::world::block::{BlockCoord, GameBlockType};
 use crate::world::chunk::{ChunkCoord, GameChunk, VertexBuffer};
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct DebugColliderTimer(pub Timer);
 
-#[derive(Ord, PartialOrd, PartialEq, Eq, Hash)]
-pub enum InteractionGroupName {
-    Floor,
-    Player
-}
-
-#[derive(Resource, Deref, DerefMut)]
-pub struct CollisionInteractionGroups(pub HashMap<InteractionGroupName, InteractionGroups>);
-
-impl Default for CollisionInteractionGroups {
-    fn default() -> Self {
-        let mut map = HashMap::new();
-
-        map.insert(InteractionGroupName::Floor, InteractionGroups::new(0b0011.into(), 0b0001.into()));
-        map.insert(InteractionGroupName::Player, InteractionGroups::new(0b0001.into(), 0b0011.into()));
-
-        Self(map)
-    }
-}
-
-pub fn debug_collider_counts(
-    mut timer: ResMut<DebugColliderTimer>,
-    time: Res<Time>,
-    active_colliders: Query<&Collider, Without<ColliderDisabled>>,
-    disabled_colliders: Query<&Collider, With<ColliderDisabled>>
-) {
-    if timer.tick(time.delta()).just_finished() {
-        info!("Colliders: Active = {} Inactive = {}", active_colliders.iter().len(), disabled_colliders.iter().len());
-    }
-}
-
-pub fn enable_close_colliders(
-    // mut chunk_query: Query<(&Transform, &mut Collider), With<ColliderDisabled>>,
-    // mut player_query: Query<&Transform, With<PlayerControl>>,
-    rapier_context: Res<RapierContext>,
+pub fn load_chunks_dynamically(
+    mut query: Query<(Entity, &GameChunk, &ChunkCoord)>,
     mut commands: Commands
 ) {
-    let aabb = Aabb::from_min_max(Vec3::new(-800.0, -800.0, -800.0), Vec3::new(800.0, 800.0, 800.0));
-    rapier_context.colliders_with_aabb_intersecting_aabb(aabb, |entity| {
-        println!("The entity {:?} has an AABB intersecting our test AABB", entity);
+    let select_box: Cube<CoordSystemIntegerSize> = Cube::from_points(
+        (-1, -1, -1).into(),
+        (1, 1, 1).into()
+    );
 
-        commands.entity(entity)
-            .remove::<ColliderDisabled>();
-
-        true // Return `false` instead if we want to stop searching for other colliders that contain this point.
-    });
-
-    // for (chunk_entity, chunk, chunk_transform) in chunk_query.iter() {
-    //     for player_transform in player_query.iter() {
-    //         if chunk_transform.translation.distance(player_transform.translation) < (CHUNK_SIZE as f32 * 1.5) {
-    //             commands.entity(chunk_entity).remove::<ColliderDisabled>();
-    //
-    //             info!("Enabled chunk collider at {}", chunk_transform.translation);
-    //         }
-    //     }
-    // }
-}
-
-pub fn disable_far_colliders(
-    mut chunk_query: Query<(Entity, &mut GameChunk, &Transform), (With<Collider>, Without<ColliderDisabled>)>,
-    mut player_query: Query<&Transform, With<PlayerControl>>,
-    mut commands: Commands
-) {
-    for (chunk_entity, chunk, chunk_transform) in chunk_query.iter() {
-        for player_transform in player_query.iter() {
-            if chunk_transform.translation.distance(player_transform.translation) >= (CHUNK_SIZE as f32 * 1.5) {
-                commands.entity(chunk_entity).insert(ColliderDisabled::default());
-
-                info!("Disabled chunk collider at {}", chunk_transform.translation);
-            }
+    for (entity, chunk, coord) in query.iter() {
+        if coord.is_inside_of_cube(&select_box) {
+            // Is inside
+        } else {
+            // Not inside
         }
     }
 }

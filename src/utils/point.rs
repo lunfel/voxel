@@ -1,4 +1,6 @@
+use std::cmp::{max, min};
 use crate::settings::CoordSystemIntegerSize;
+use crate::utils::cube::Cube;
 
 #[derive(Default, PartialEq, Eq, Hash, Clone)]
 pub struct Point3D<T: Copy> {
@@ -92,6 +94,37 @@ impl From<Point3D<usize>> for Point3D<i8> {
     }
 }
 
+impl<T: Copy + Ord> Point3D<T> {
+    pub fn is_inside_of_cube(&self, cube: &Cube<T>) -> bool {
+        cube.min.x <= self.x && self.x <= cube.max.x
+            && cube.min.y <= self.y && self.y <= cube.max.y
+            && cube.min.z <= self.z && self.z <= cube.max.z
+    }
+
+    pub fn min(&self, other: &Point3D<T>) -> Self {
+        Self {
+            x: min(self.x, other.x),
+            y: min(self.y, other.y),
+            z: min(self.z, other.z),
+        }
+    }
+
+    pub fn max(&self, other: &Point3D<T>) -> Self {
+        Self {
+            x: max(self.x, other.x),
+            y: max(self.y, other.y),
+            z: max(self.z, other.z),
+        }
+    }
+
+    pub fn min_max(&self, other: &Point3D<T>) -> (Self, Self) {
+        (
+            self.min(other),
+            self.max(other)
+        )
+    }
+}
+
 impl TryFrom<Point3D<i8>> for Point3D<usize> {
     type Error = std::num::TryFromIntError;
     fn try_from(value: Point3D<i8>) -> Result<Self, Self::Error> {
@@ -112,4 +145,3 @@ impl<T: Copy> From<(T, T, T)> for Point3D<T> {
         Self { x: value.0, y: value.1, z: value.2 }
     }
 }
-
