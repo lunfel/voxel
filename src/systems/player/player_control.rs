@@ -57,6 +57,7 @@ impl Default for MovementSettings {
 
 #[derive(Resource)]
 pub struct KeyBindings {
+    pub toggle_fullscreen: KeyCode,
     pub toggle_grab_cursor: KeyCode,
     pub move_forward: KeyCode,
     pub move_backward: KeyCode,
@@ -70,6 +71,7 @@ pub struct KeyBindings {
 impl Default for KeyBindings {
     fn default() -> Self {
         Self {
+            toggle_fullscreen: KeyCode::F,
             toggle_grab_cursor: KeyCode::Escape,
             move_forward: KeyCode::W,
             move_backward: KeyCode::S,
@@ -118,8 +120,6 @@ pub fn setup_player(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     info!("Setup player");
-
-    let player_position = Transform::from_xyz(8.0, 20.0, 8.0);
 
     // Player's eyes
     commands.spawn((FollowsPlayerPosition, PlayerEyes, Transform::from_xyz(8.0, 20.0, 8.0).looking_at(
@@ -177,9 +177,6 @@ pub fn setup_player(
             combine_rule: CoefficientCombineRule::Min,
         },
         RigidBody::KinematicPositionBased,
-        // @todo: change to capsule, might resolve the turn-pushback from physics?
-        // Collider::cuboid(0.5, 1.65, 0.5),
-        // Collider::capsule_y(1.65, 0.5),
         Collider::cylinder(0.825, 0.5),
         KinematicCharacterController {
             snap_to_ground: Some(CharacterLength::Relative(0.5)),
@@ -220,7 +217,7 @@ pub fn player_move(
             let right = Vec3::new(local_z.z, 0.0, -local_z.x);
             let upward = Vec3::new(0.0, local_y.y, 0.0);
             // let jump = Vec3::new(0.0, 2.0, 0.0);
-            let jump_vel = 5.0;
+            let jump_vel = 4.5;
             let mut just_started_jumping = false;
             // Approximativement 53m/s en chute libre dans les airs
 
@@ -375,7 +372,7 @@ pub fn follow_player_position(
 ) {
     if let Ok(source_transform) = query_source.get_single() {
         for mut transform in query.iter_mut() {
-            transform.translation = source_transform.translation
+            transform.translation = source_transform.translation + Vec3::new(0.25, 0.825, 0.0)
         }
     }
 }
