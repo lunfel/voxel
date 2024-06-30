@@ -1,16 +1,19 @@
+mod screen;
+mod settings;
 mod systems;
 mod utils;
 mod world;
-mod settings;
-mod screen;
 
-use bevy::{prelude::*, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
-use systems::{world_generation::WorldGenerationPlugin, player::PlayerPlugin};
-use bevy_rapier3d::prelude::*;
 use crate::screen::ScreenPlugin;
 use crate::settings::GameParameters;
 use crate::systems::world_generation::BlockMaterialMap;
 use crate::world::WorldPlugin;
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    prelude::*,
+};
+use bevy_rapier3d::prelude::*;
+use systems::{player::PlayerPlugin, world_generation::WorldGenerationPlugin};
 
 fn main() {
     App::new()
@@ -29,7 +32,7 @@ fn main() {
         // .add_plugins(WorldInspectorPlugin::new())
         .init_resource::<BlockMaterialMap>()
         .run();
-} 
+}
 
 fn setup_physics(mut commands: Commands) {
     /* Create the bouncing ball. */
@@ -39,4 +42,3 @@ fn setup_physics(mut commands: Commands) {
         .insert(Restitution::coefficient(0.1))
         .insert(TransformBundle::from(Transform::from_xyz(16.0, 20.0, 16.0)));
 }
-

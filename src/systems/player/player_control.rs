@@ -50,7 +50,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.00012,
-            speed: 12.0, // Used to be 5
+            speed: 5.0, // Used to be 5
         }
     }
 }
@@ -85,6 +85,18 @@ impl Default for KeyBindings {
 #[derive(Component)]
 pub struct PlayerControl;
 
+#[derive(Component)]
+pub struct PlayerEyes;
+
+#[derive(Component)]
+pub struct FollowsPlayerPosition;
+
+#[derive(Component)]
+pub struct FollowsPlayerLookLeftRight;
+
+#[derive(Component)]
+pub struct FollowsPlayerLookUpDown;
+
 #[derive(Default, Debug)]
 pub enum PlayerGroundedEnum {
     Grounded,
@@ -100,13 +112,32 @@ pub struct PlayerState {
     pub is_jumping: bool,
 }
 
-pub fn setup_player(mut commands: Commands) {
+pub fn setup_player(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     info!("Setup player");
+
+    let player_position = Transform::from_xyz(8.0, 20.0, 8.0);
+
+    // Player's eyes
+    commands.spawn((FollowsPlayerPosition, PlayerEyes, Transform::from_xyz(8.0, 20.0, 8.0).looking_at(
+        Vec3 {
+            z: CHUNK_SIZE as f32 / 2.0,
+            x: CHUNK_SIZE as f32 / 2.0,
+            ..default()
+        },
+        Vec3::Y,
+    )));
+
+    // Camera
     commands.spawn((
-        PlayerControl,
-        PlayerState::default(),
+        FollowsPlayerLookLeftRight,
+        FollowsPlayerLookUpDown,
+        FollowsPlayerPosition,
         Camera3dBundle {
-            transform: Transform::from_xyz(5.0, 15.0, 5.0).looking_at(
+            transform: Transform::from_xyz(5.0, 13.0, 5.0).looking_at(
                 Vec3 {
                     z: CHUNK_SIZE as f32 / 2.0,
                     x: CHUNK_SIZE as f32 / 2.0,
@@ -115,6 +146,23 @@ pub fn setup_player(mut commands: Commands) {
                 Vec3::Y,
             ),
             ..default()
+        },
+    ));
+
+    // The player itself
+    commands.spawn((
+        PlayerControl,
+        FollowsPlayerLookLeftRight,
+        PlayerState::default(),
+        PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cylinder {
+                height: 1.65,
+                radius: 0.5,
+                ..Default::default()
+            })),
+            material: materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0).into()),
+            transform: Transform::from_xyz(8.0, 20.0, 8.0),
+            ..Default::default()
         },
         FogSettings {
             color: Color::rgba(0.5, 0.5, 0.5, 0.8),
@@ -132,11 +180,11 @@ pub fn setup_player(mut commands: Commands) {
         // @todo: change to capsule, might resolve the turn-pushback from physics?
         // Collider::cuboid(0.5, 1.65, 0.5),
         // Collider::capsule_y(1.65, 0.5),
-        Collider::cylinder(1.65, 0.5),
+        Collider::cylinder(0.825, 0.5),
         KinematicCharacterController {
             snap_to_ground: Some(CharacterLength::Relative(0.5)),
             autostep: Some(CharacterAutostep {
-                max_height: CharacterLength::Relative(0.1),
+                max_height: CharacterLength::Absolute(0.1),
                 ..default()
             }),
             ..default()
@@ -172,7 +220,7 @@ pub fn player_move(
             let right = Vec3::new(local_z.z, 0.0, -local_z.x);
             let upward = Vec3::new(0.0, local_y.y, 0.0);
             // let jump = Vec3::new(0.0, 2.0, 0.0);
-            let jump_vel = 3.0;
+            let jump_vel = 5.0;
             let mut just_started_jumping = false;
             // Approximativement 53m/s en chute libre dans les airs
 
@@ -233,7 +281,7 @@ pub fn player_move(
 
             let v0_y = player_state.last_velocity * Vec3::Y;
 
-            let final_vel = move_velocity
+            let mut final_vel = move_velocity
                 + if just_started_jumping {
                     // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
                     Vec3::new(0.0, jump_vel, 0.0)
@@ -243,6 +291,13 @@ pub fn player_move(
                     // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
                     v0_y + grav * delta
                 };
+
+            // for collision in &character_output.collisions {
+            //     // let normal = collision.toi.normal2 * Vec3::new(1.0, 0.0, 1.0);
+            //     let normal = collision.toi.normal2;
+
+            //     final_vel = final_vel - normal * final_vel.dot(normal);
+            // }
 
             player_state.last_velocity = final_vel;
 
@@ -256,7 +311,7 @@ pub fn player_look(
     primary_window: Query<&Window, With<PrimaryWindow>>,
     mut state: ResMut<InputState>,
     motion: Res<Events<MouseMotion>>,
-    mut query: Query<&mut Transform, With<PlayerControl>>,
+    mut query: Query<&mut Transform, With<PlayerEyes>>,
 ) {
     if let Ok(window) = primary_window.get_single() {
         for mut transform in query.iter_mut() {
@@ -279,6 +334,49 @@ pub fn player_look(
         }
     } else {
         warn!("Primary window not found for `player_look`");
+    }
+}
+
+pub fn follow_player_look_left_right(
+    mut query: Query<&mut Transform, (With<FollowsPlayerLookLeftRight>, Without<PlayerEyes>)>,
+    query_source: Query<&Transform, With<PlayerEyes>>,
+) {
+    if let Ok(source_transform) = query_source.get_single() {
+        for mut transform in query.iter_mut() {
+            let (_, pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
+            let (yaw, _, _) = source_transform.rotation.to_euler(EulerRot::YXZ);
+
+            transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+        }
+    } else {
+        warn!("No player eyes found!");
+    }
+}
+
+pub fn follow_player_look_up_down(
+    mut query: Query<&mut Transform, (With<FollowsPlayerLookUpDown>, Without<PlayerEyes>)>,
+    query_source: Query<&Transform, With<PlayerEyes>>,
+) {
+    if let Ok(source_transform) = query_source.get_single() {
+        for mut transform in query.iter_mut() {
+            let (yaw, _, _) = transform.rotation.to_euler(EulerRot::YXZ);
+            let (_, pitch, _) = source_transform.rotation.to_euler(EulerRot::YXZ);
+
+            transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+        }
+    } else {
+        warn!("No player eyes found!");
+    }
+}
+
+pub fn follow_player_position(
+    mut query: Query<&mut Transform, With<FollowsPlayerPosition>>,
+    query_source: Query<&Transform, (With<PlayerControl>, Without<FollowsPlayerPosition>)>
+) {
+    if let Ok(source_transform) = query_source.get_single() {
+        for mut transform in query.iter_mut() {
+            transform.translation = source_transform.translation
+        }
     }
 }
 
