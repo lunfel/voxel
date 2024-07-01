@@ -278,7 +278,7 @@ pub fn player_move(
 
             let v0_y = player_state.last_velocity * Vec3::Y;
 
-            let mut final_vel = move_velocity
+            let final_vel = move_velocity
                 + if just_started_jumping {
                     // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
                     Vec3::new(0.0, jump_vel, 0.0)
@@ -288,13 +288,6 @@ pub fn player_move(
                     // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
                     v0_y + grav * delta
                 };
-
-            // for collision in &character_output.collisions {
-            //     // let normal = collision.toi.normal2 * Vec3::new(1.0, 0.0, 1.0);
-            //     let normal = collision.toi.normal2;
-
-            //     final_vel = final_vel - normal * final_vel.dot(normal);
-            // }
 
             player_state.last_velocity = final_vel;
 
@@ -372,7 +365,7 @@ pub fn follow_player_position(
 ) {
     if let Ok(source_transform) = query_source.get_single() {
         for mut transform in query.iter_mut() {
-            transform.translation = source_transform.translation + Vec3::new(0.25, 0.825, 0.0)
+            transform.translation = source_transform.translation + Vec3::new(0.0, 0.825 - 0.1, 0.0)
         }
     }
 }

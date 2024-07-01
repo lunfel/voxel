@@ -1,7 +1,6 @@
-use std::fmt::Formatter;
 use bevy::prelude::*;
-use bevy::window::{PrimaryWindow, WindowMode, WindowResolution};
-use bevy::window::WindowMode::{BorderlessFullscreen, Fullscreen};
+use bevy::window::WindowMode;
+
 use crate::systems::player::player_control::KeyBindings;
 
 pub struct ScreenPlugin;
@@ -23,7 +22,7 @@ fn toggle_fullscreen(
 ) {
     if let Ok((mut window, entity)) = window.get_single_mut() {
         if keys.just_pressed(key_bindings.toggle_fullscreen) {
-            window.mode = Fullscreen;
+            window.mode = WindowMode::Fullscreen;
 
             let width = window.width();
             let height = window.height();

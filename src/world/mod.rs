@@ -1,17 +1,13 @@
-use bevy::prelude::Resource;
 use bevy::app::App;
 use bevy::prelude::*;
 
-use crate::utils::point::Point3D;
-use crate::world::systems::chunk::DebugColliderTimer;
-use crate::world::world::{bind_fresh_game_chunk_entity_to_game_world, GameWorld};
+use systems::chunk::DebugColliderTimer;
+use game_world::{bind_fresh_game_chunk_entity_to_game_world, GameWorld};
 
 pub mod block;
 pub mod chunk;
 pub mod systems;
-pub mod world;
-
-pub struct GameCoord(Point3D<i32>);
+pub mod game_world;
 
 pub struct WorldPlugin;
 
