@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::render::mesh::Indices;
 use bevy::utils::hashbrown::HashMap;
 use noise::{NoiseFn, Perlin};
 use bevy_rapier3d::prelude::*;
@@ -8,8 +9,8 @@ use crate::settings::{CoordSystemIntegerSize, GameParameters};
 use crate::utils::fresh_entity::FreshEntity;
 use crate::utils::point::Point3D;
 use crate::world::block::BlockCoord;
-use crate::world::chunk::ChunkCoord;
-use crate::world::systems::chunk::render_chunk;
+use crate::world::chunk::{ChunkCoord, Vertex};
+use crate::world::systems::chunk::{render_indices_and_vertices, render_mesh};
 
 #[derive(Resource)]
 pub struct WorldGenerationState {
@@ -128,13 +129,13 @@ pub fn generate_world(
     // Let's assume player is at 0,0,0 for now
 
     let player_position: Point3D<i32> = Point3D::default();
-    let dimension = 2;
+    let dimension = 16;
 
     for x in player_position.x - dimension..player_position.x + dimension {
         for z in player_position.z - dimension..player_position.z + dimension {
             let chunk_coord: ChunkCoord = (x as CoordSystemIntegerSize, 0 as CoordSystemIntegerSize, z as CoordSystemIntegerSize).into();
 
-            let transform = Transform::from_xyz(
+            let chunk_transform = Transform::from_xyz(
                 (chunk_coord.x * game_parameters.chunk_size) as f32,
                 (chunk_coord.y * game_parameters.chunk_size) as f32,
                 (chunk_coord.z * game_parameters.chunk_size) as f32
@@ -144,48 +145,43 @@ pub fn generate_world(
 
             let chunk = generate_single_chunk(&chunk_coord);
 
-            let mesh = render_chunk(&game_parameters, &chunk);
+            let (indices, vertices) = render_indices_and_vertices(&game_parameters, &chunk);
 
-            let mesh_handle = mesh_manager.add(mesh);
-
-            for x in 0..game_parameters.chunk_size {
-                for y in 0..game_parameters.chunk_size {
-                    for z in 0..game_parameters.chunk_size {
-                        if let Some(block) = chunk.get_block(&(x, y, z)) {
-                            if !block.is_fully_surrounded && block.block_type != GameBlockType::Empty {
-                                let block_transform = Transform::from_xyz(
-                                    (chunk_coord.x * game_parameters.chunk_size + x) as f32,
-                                    (chunk_coord.y * game_parameters.chunk_size + y) as f32,
-                                    (chunk_coord.z * game_parameters.chunk_size + z) as f32
-                                );
-
-                                commands.spawn((
-                                    block_transform,
-                                    Collider::cuboid(0.5, 0.5, 0.5),
-                                    RigidBody::Fixed,
-                                    GlobalTransform::default(),
-                                    Friction {
-                                        coefficient: 0.0,
-                                        combine_rule: CoefficientCombineRule::Min
-                                    }
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
+            let mesh_handle = mesh_manager.add(render_mesh(&indices, &vertices));
 
             let pbr = PbrBundle {
-                transform,
+                transform: chunk_transform,
                 mesh: mesh_handle,
                 material: block_material_map.get(&GameBlockType::Ground).unwrap().clone(),
                 ..default()
             };
 
+            let v: Vec<Vect> = vertices.iter().map(|(v, _, _)| Vec3::from_array(*v)).collect();
+            let i: Vec<[u32; 3]> = match indices {
+                Indices::U16(_) => todo!("Not used by the game"),
+                Indices::U32(indices) => {
+                    indices.chunks(3)
+                        .map(|chunk| {
+                            let mut vec: [u32; 3] = [0, 0, 0];
+
+                            vec[0..3].clone_from_slice(&chunk[0..3]);
+
+                            vec
+                        })
+                        .collect()
+                    }
+                };
+
             commands.spawn((
                 pbr,
                 chunk,
                 chunk_coord,
+                RigidBody::Fixed,
+                Collider::trimesh(
+                    v,
+                    i
+                ),
+                Sensor,
                 FreshEntity::default()
             ));
         }

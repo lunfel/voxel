@@ -46,7 +46,9 @@ pub fn render_dirty_chunk(
         entity_commands.remove::<Handle<Mesh>>();
         mesh_manager.remove(mesh_handle);
 
-        let mesh = render_chunk(&game_parameters, chunk);
+        let (indices, vertices) = render_indices_and_vertices(&game_parameters, chunk);
+
+        let mesh = render_mesh(&indices, &vertices);
 
         let mesh_handle = mesh_manager.add(mesh);
 
@@ -56,7 +58,7 @@ pub fn render_dirty_chunk(
     }
 }
 
-pub fn render_chunk(game_parameters: &GameParameters, chunk: &GameChunk) -> Mesh {
+pub fn render_indices_and_vertices(game_parameters: &GameParameters, chunk: &GameChunk) -> (Indices, VertexBuffer) {
     let mut indices: Vec<u32> = vec![];
     let mut total_nb_faces: u32 = 0;
     let mut vertices: VertexBuffer = vec![];
@@ -75,6 +77,12 @@ pub fn render_chunk(game_parameters: &GameParameters, chunk: &GameChunk) -> Mesh
         }
     }
 
+    let indices = Indices::U32(indices);
+
+    (indices, vertices)
+}
+
+pub fn render_mesh(indices: &Indices, vertices: &VertexBuffer) -> Mesh {
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
     let positions: Vec<_> = vertices.iter().map(|(p, _, _)| *p).collect();
@@ -85,16 +93,7 @@ pub fn render_chunk(game_parameters: &GameParameters, chunk: &GameChunk) -> Mesh
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
 
-    let indices = Indices::U32(indices);
-
-    mesh.set_indices(Some(indices));
-
-    // let collider_base = Collider::from_bevy_mesh(&mesh, &ComputedColliderShape::TriMesh)
-    //     .unwrap();
-    //
-    // let collider = ColliderBuilder::new(collider_base.raw)
-    //     .collision_groups(InteractionGroups::new(0b0011.into(), 0b0001.into()))
-    //     .build();
+    mesh.set_indices(Some(indices.clone()));
 
     mesh
 }

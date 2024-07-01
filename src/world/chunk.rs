@@ -45,7 +45,10 @@ pub struct GameChunk {
     pub blocks: ChunkBlocks
 }
 
-pub type VertexBuffer = Vec<([f32; 3], [f32; 3], [f32; 2])>;
+pub type Vertex = [f32; 3];
+type Normal = [f32; 3];
+type UV = [f32; 2];
+pub type VertexBuffer = Vec<(Vertex, Normal, UV)>;
 
 impl GameChunk {
     pub fn new() -> Self {

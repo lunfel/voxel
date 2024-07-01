@@ -147,6 +147,14 @@ pub fn setup_player(
             ),
             ..default()
         },
+        FogSettings {
+            color: Color::rgba(0.5, 0.5, 0.5, 0.7),
+            falloff: FogFalloff::Linear {
+                start: 100.0,
+                end: 125.0,
+            },
+            ..default()
+        },
     ));
 
     // The player itself
@@ -154,24 +162,18 @@ pub fn setup_player(
         PlayerControl,
         FollowsPlayerLookLeftRight,
         PlayerState::default(),
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cylinder {
-                height: 1.65,
-                radius: 0.5,
-                ..Default::default()
-            })),
-            material: materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0).into()),
-            transform: Transform::from_xyz(8.0, 20.0, 8.0),
-            ..Default::default()
-        },
-        FogSettings {
-            color: Color::rgba(0.5, 0.5, 0.5, 0.8),
-            falloff: FogFalloff::Linear {
-                start: 100.0,
-                end: 125.0,
-            },
-            ..default()
-        },
+        // PbrBundle {
+        //     mesh: meshes.add(Mesh::from(shape::Cylinder {
+        //         height: 1.65,
+        //         radius: 0.5,
+        //         ..Default::default()
+        //     })),
+        //     material: materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0).into()),
+        //     transform: Transform::from_xyz(8.0, 20.0, 8.0),
+        //     ..Default::default()
+        // },
+        GlobalTransform::default(),
+        Transform::from_xyz(8.0, 20.0, 8.0),
         Friction {
             coefficient: 0.0,
             combine_rule: CoefficientCombineRule::Min,
