@@ -41,7 +41,7 @@ impl Plugin for PlayerPlugin {
 fn setup(mut commands: Commands) {
     info!("Inserting light in the world");
     commands.insert_resource(AmbientLight {
-        brightness: 0.15,
+        brightness: 80.0,
         ..default()
     });
 

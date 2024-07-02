@@ -15,7 +15,7 @@ impl Default for PreviousWindowMode {
 }
 
 fn toggle_fullscreen(
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     key_bindings: Res<KeyBindings>,
     mut window: Query<(&mut Window, Entity)>,
     mut focused_event: EventWriter<CursorMoved>,
@@ -32,9 +32,10 @@ fn toggle_fullscreen(
             window.set_cursor_position(Some(position));
             focused_event.send(CursorMoved {
                 window: entity,
+                delta: None,
                 position,
             });
-        } else if keys.just_pressed(KeyCode::G) {
+        } else if keys.just_pressed(KeyCode::KeyG) {
             window.mode = WindowMode::Windowed;
 
             let width = window.width();
@@ -43,6 +44,7 @@ fn toggle_fullscreen(
             window.set_cursor_position(Some(position));
             focused_event.send(CursorMoved {
                 window: entity,
+                delta: None,
                 position,
             });
         }

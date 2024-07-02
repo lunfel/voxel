@@ -110,8 +110,8 @@ impl FromWorld for BlockMaterialMap {
 
         let mut material_map: BlockMaterialHashMap = HashMap::new();
 
-        material_map.insert(GameBlockType::Rock, materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0).into()));
-        material_map.insert(GameBlockType::Ground, materials.add(Color::rgb(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0).into()));
+        material_map.insert(GameBlockType::Rock, materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0)));
+        material_map.insert(GameBlockType::Ground, materials.add(Color::rgb(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0)));
 
         Self(material_map)
     }
@@ -181,7 +181,6 @@ pub fn generate_world(
                     v,
                     i
                 ),
-                Sensor,
                 FreshEntity::default()
             ));
         }

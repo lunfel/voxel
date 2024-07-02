@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
+use bevy::render::render_asset::RenderAssetUsages;
 use bevy_rapier3d::prelude::*;
 
 use crate::settings::{CoordSystemIntegerSize, GameParameters};
@@ -83,7 +84,7 @@ pub fn render_indices_and_vertices(game_parameters: &GameParameters, chunk: &Gam
 }
 
 pub fn render_mesh(indices: &Indices, vertices: &VertexBuffer) -> Mesh {
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD);
 
     let positions: Vec<_> = vertices.iter().map(|(p, _, _)| *p).collect();
     let normals: Vec<_> = vertices.iter().map(|(_, n, _)| *n).collect();
@@ -93,7 +94,7 @@ pub fn render_mesh(indices: &Indices, vertices: &VertexBuffer) -> Mesh {
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
 
-    mesh.set_indices(Some(indices.clone()));
+    mesh.insert_indices(indices.clone());
 
     mesh
 }

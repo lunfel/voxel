@@ -71,14 +71,14 @@ pub struct KeyBindings {
 impl Default for KeyBindings {
     fn default() -> Self {
         Self {
-            toggle_fullscreen: KeyCode::F,
+            toggle_fullscreen: KeyCode::KeyF,
             toggle_grab_cursor: KeyCode::Escape,
-            move_forward: KeyCode::W,
-            move_backward: KeyCode::S,
-            move_left: KeyCode::A,
-            move_right: KeyCode::D,
-            move_downward: KeyCode::Q,
-            move_upward: KeyCode::E,
+            move_forward: KeyCode::KeyW,
+            move_backward: KeyCode::KeyS,
+            move_left: KeyCode::KeyA,
+            move_right: KeyCode::KeyD,
+            move_downward: KeyCode::KeyQ,
+            move_upward: KeyCode::KeyE,
             jump: KeyCode::Space,
         }
     }
@@ -193,7 +193,7 @@ pub fn setup_player(
 }
 
 pub fn player_move(
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<MovementSettings>,
@@ -311,7 +311,7 @@ pub fn player_look(
 ) {
     if let Ok(window) = primary_window.get_single() {
         for mut transform in query.iter_mut() {
-            for ev in state.reader_motion.iter(&motion) {
+            for ev in state.reader_motion.read(&motion) {
                 let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
                 match window.cursor.grab_mode {
                     CursorGrabMode::None => (),
@@ -398,7 +398,7 @@ pub fn toggle_grab_cursor(window: &mut Window) {
 }
 
 pub fn cursor_grab(
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     key_bindings: Res<KeyBindings>,
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
