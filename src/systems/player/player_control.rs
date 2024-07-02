@@ -99,7 +99,7 @@ pub struct FollowsPlayerLookLeftRight;
 #[derive(Component)]
 pub struct FollowsPlayerLookUpDown;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub enum PlayerGroundedEnum {
     Grounded,
     #[default]
@@ -235,6 +235,10 @@ pub fn player_move(
                 _ => {
                     player_state.time_grounded_changed.tick(time.delta());
                 }
+            }
+
+            if player_state.grounded_state == PlayerGroundedEnum::Grounded {
+                player_state.last_velocity *= Vec3::X + Vec3::Z
             }
 
             for key in keys.get_pressed() {

@@ -158,7 +158,7 @@ pub fn generate_world(
 
             let v: Vec<Vect> = vertices.iter().map(|(v, _, _)| Vec3::from_array(*v)).collect();
             let i: Vec<[u32; 3]> = match indices {
-                Indices::U16(_) => todo!("Not used by the game"),
+                Indices::U16(_) => unimplemented!("Not used by the game"),
                 Indices::U32(indices) => {
                     indices.chunks(3)
                         .map(|chunk| {
