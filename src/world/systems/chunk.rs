@@ -2,13 +2,12 @@ use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy_rapier3d::prelude::*;
-
 use crate::settings::{CoordSystemIntegerSize, GameParameters};
 use crate::systems::player::player_control::PlayerControl;
-use crate::systems::world_generation::BlockMaterialMap;
+use crate::systems::world_generation::{BlockMaterial, BlockMaterialMap};
 use crate::utils::cube::Cube;
 use crate::world::block::{BlockCoord, GameBlockType};
-use crate::world::chunk::{ChunkCoord, GameChunk, VertexBuffer};
+use crate::world::chunk::{ChunkCoord, GameChunk, UV, VertexBuffer};
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct DebugColliderTimer(pub Timer);
@@ -37,6 +36,7 @@ pub fn render_dirty_chunk(
     game_parameters: Res<GameParameters>,
     mut mesh_manager: ResMut<Assets<Mesh>>,
     block_material_mapping: Res<BlockMaterialMap>,
+    block_material: Res<BlockMaterial>,
     mut commands: Commands
 ) {
     for (entity, chunk, coord, collider, mesh_handle) in query.iter() {
@@ -99,65 +99,80 @@ pub fn render_mesh(indices: &Indices, vertices: &VertexBuffer) -> Mesh {
     mesh
 }
 
+fn apply_uv_offset(uv: UV, offset: f32) -> UV {
+    let [u, v] = uv;
+
+    [u / 4.0 + offset, v]
+}
+
 fn render_chunk_block(chunk: &GameChunk, coord: &BlockCoord, indices: &mut Vec<u32>, total_nb_faces: &mut u32, vertices: &mut VertexBuffer) {
     // suppose Y-up right hand, and camera look from +z to -z
     let sp = shape::Box::new(1.0, 1.0, 1.0);
 
     let indices_template = [0, 1, 2, 2, 3, 0];
 
+    let block = chunk.get_block(coord).expect("A block was expected here, but no block found");
+
+    let uv_offset = match block.block_type {
+        GameBlockType::Rock => 0.25,
+        GameBlockType::Ground => 0.50,
+        GameBlockType::Gem => 0.75,
+        _ => 0.00
+    };
+
     let faces: [_; 6] = [
         (
             coord.front_neighbor(),
             [
-                ([sp.min_x, sp.min_y, sp.max_z], [0., 0., 1.0], [0., 0.]),
-                ([sp.max_x, sp.min_y, sp.max_z], [0., 0., 1.0], [1.0, 0.]),
-                ([sp.max_x, sp.max_y, sp.max_z], [0., 0., 1.0], [1.0, 1.0]),
-                ([sp.min_x, sp.max_y, sp.max_z], [0., 0., 1.0], [0., 1.0])
+                ([sp.min_x, sp.min_y, sp.max_z], [0., 0., 1.0], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.max_x, sp.min_y, sp.max_z], [0., 0., 1.0], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.max_x, sp.max_y, sp.max_z], [0., 0., 1.0], apply_uv_offset([1.0, 1.0], uv_offset)),
+                ([sp.min_x, sp.max_y, sp.max_z], [0., 0., 1.0], apply_uv_offset([0., 1.0], uv_offset))
             ]
         ),
         (
             coord.back_neighbor(),
             [
-                ([sp.min_x, sp.max_y, sp.min_z], [0., 0., -1.0], [1.0, 0.]),
-                ([sp.max_x, sp.max_y, sp.min_z], [0., 0., -1.0], [0., 0.]),
-                ([sp.max_x, sp.min_y, sp.min_z], [0., 0., -1.0], [0., 1.0]),
-                ([sp.min_x, sp.min_y, sp.min_z], [0., 0., -1.0], [1.0, 1.0])
+                ([sp.min_x, sp.max_y, sp.min_z], [0., 0., -1.0], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.max_x, sp.max_y, sp.min_z], [0., 0., -1.0], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.max_x, sp.min_y, sp.min_z], [0., 0., -1.0], apply_uv_offset([0., 1.0], uv_offset)),
+                ([sp.min_x, sp.min_y, sp.min_z], [0., 0., -1.0], apply_uv_offset([1.0, 1.0], uv_offset))
             ]
         ),
         (
             coord.right_neighbor(),
             [
-                ([sp.max_x, sp.min_y, sp.min_z], [1.0, 0., 0.], [0., 0.]),
-                ([sp.max_x, sp.max_y, sp.min_z], [1.0, 0., 0.], [1.0, 0.]),
-                ([sp.max_x, sp.max_y, sp.max_z], [1.0, 0., 0.], [1.0, 1.0]),
-                ([sp.max_x, sp.min_y, sp.max_z], [1.0, 0., 0.], [0., 1.0])
+                ([sp.max_x, sp.min_y, sp.min_z], [1.0, 0., 0.], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.max_x, sp.max_y, sp.min_z], [1.0, 0., 0.], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.max_x, sp.max_y, sp.max_z], [1.0, 0., 0.], apply_uv_offset([1.0, 1.0], uv_offset)),
+                ([sp.max_x, sp.min_y, sp.max_z], [1.0, 0., 0.], apply_uv_offset([0., 1.0], uv_offset))
             ]
         ),
         (
             coord.left_neighbor(),
             [
-                ([sp.min_x, sp.min_y, sp.max_z], [-1.0, 0., 0.], [1.0, 0.]),
-                ([sp.min_x, sp.max_y, sp.max_z], [-1.0, 0., 0.], [0., 0.]),
-                ([sp.min_x, sp.max_y, sp.min_z], [-1.0, 0., 0.], [0., 1.0]),
-                ([sp.min_x, sp.min_y, sp.min_z], [-1.0, 0., 0.], [1.0, 1.0])
+                ([sp.min_x, sp.min_y, sp.max_z], [-1.0, 0., 0.], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.min_x, sp.max_y, sp.max_z], [-1.0, 0., 0.], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.min_x, sp.max_y, sp.min_z], [-1.0, 0., 0.], apply_uv_offset([0., 1.0], uv_offset)),
+                ([sp.min_x, sp.min_y, sp.min_z], [-1.0, 0., 0.], apply_uv_offset([1.0, 1.0], uv_offset))
             ]
         ),
         (
             coord.top_neighbor(),
             [
-                ([sp.max_x, sp.max_y, sp.min_z], [0., 1.0, 0.], [1.0, 0.]),
-                ([sp.min_x, sp.max_y, sp.min_z], [0., 1.0, 0.], [0., 0.]),
-                ([sp.min_x, sp.max_y, sp.max_z], [0., 1.0, 0.], [0., 1.0]),
-                ([sp.max_x, sp.max_y, sp.max_z], [0., 1.0, 0.], [1.0, 1.0])
+                ([sp.max_x, sp.max_y, sp.min_z], [0., 1.0, 0.], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.min_x, sp.max_y, sp.min_z], [0., 1.0, 0.], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.min_x, sp.max_y, sp.max_z], [0., 1.0, 0.], apply_uv_offset([0., 1.0], uv_offset)),
+                ([sp.max_x, sp.max_y, sp.max_z], [0., 1.0, 0.], apply_uv_offset([1.0, 1.0], uv_offset))
             ]
         ),
         (
             coord.bottom_neighbor(),
             [
-                ([sp.max_x, sp.min_y, sp.max_z], [0., -1.0, 0.], [0., 0.]),
-                ([sp.min_x, sp.min_y, sp.max_z], [0., -1.0, 0.], [1.0, 0.]),
-                ([sp.min_x, sp.min_y, sp.min_z], [0., -1.0, 0.], [1.0, 1.0]),
-                ([sp.max_x, sp.min_y, sp.min_z], [0., -1.0, 0.], [0., 1.0])
+                ([sp.max_x, sp.min_y, sp.max_z], [0., -1.0, 0.], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.min_x, sp.min_y, sp.max_z], [0., -1.0, 0.], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.min_x, sp.min_y, sp.min_z], [0., -1.0, 0.], apply_uv_offset([1.0, 1.0], uv_offset)),
+                ([sp.max_x, sp.min_y, sp.min_z], [0., -1.0, 0.], apply_uv_offset([0., 1.0], uv_offset))
             ]
         )
     ];

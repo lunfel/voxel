@@ -6,7 +6,7 @@ mod world;
 
 use crate::screen::ScreenPlugin;
 use crate::settings::GameParameters;
-use crate::systems::world_generation::BlockMaterialMap;
+use crate::systems::world_generation::{BlockMaterial, BlockMaterialMap};
 use crate::world::WorldPlugin;
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
@@ -31,6 +31,7 @@ fn main() {
         .add_plugins(WorldPlugin)
         // .add_plugins(WorldInspectorPlugin::new())
         .init_resource::<BlockMaterialMap>()
+        .init_resource::<BlockMaterial>()
         .run();
 }
 

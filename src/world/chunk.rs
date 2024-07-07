@@ -47,7 +47,7 @@ pub struct GameChunk {
 
 pub type Vertex = [f32; 3];
 type Normal = [f32; 3];
-type UV = [f32; 2];
+pub type UV = [f32; 2];
 pub type VertexBuffer = Vec<(Vertex, Normal, UV)>;
 
 impl GameChunk {

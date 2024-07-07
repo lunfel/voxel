@@ -7,7 +7,8 @@ pub enum GameBlockType {
     #[default]
     Empty,
     Rock,
-    Ground
+    Ground,
+    Gem
 }
 
 #[derive(Default, Copy, Clone)]

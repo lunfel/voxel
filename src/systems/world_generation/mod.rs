@@ -59,6 +59,8 @@ where P: Into<ChunkCoord> + Clone
                 if height == y {
                     game_chunk.blocks[x][y][z].block_type = if ground_layer_perlin.get([px, pz]) > 0.5 {
                         GameBlockType::Rock
+                    } else if ground_layer_perlin.get([px, pz]) > 0.4 {
+                        GameBlockType::Gem
                     } else {
                         GameBlockType::Ground
                     }
@@ -104,6 +106,22 @@ pub type BlockMaterialHashMap = HashMap<GameBlockType, Handle<StandardMaterial>>
 #[derive(Resource, Deref, DerefMut)]
 pub struct BlockMaterialMap(BlockMaterialHashMap);
 
+#[derive(Resource, Deref, DerefMut, Clone)]
+pub struct BlockMaterial(Handle<StandardMaterial>);
+
+impl FromWorld for BlockMaterial {
+    fn from_world(world: &mut World) -> Self {
+        let mut asset_server = world.resource_mut::<AssetServer>();
+        let handle_image = asset_server.load("block-textures.png");
+
+        let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
+
+        let handle_material = materials.add(handle_image);
+
+        Self(handle_material)
+    }
+}
+
 impl FromWorld for BlockMaterialMap {
     fn from_world(world: &mut World) -> Self {
         let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
@@ -119,7 +137,7 @@ impl FromWorld for BlockMaterialMap {
 
 pub fn generate_world(
     mut world_generation_state: ResMut<WorldGenerationState>,
-    block_material_map: Res<BlockMaterialMap>,
+    block_material: Res<BlockMaterial>,
     game_parameters: Res<GameParameters>,
     mut mesh_manager: ResMut<Assets<Mesh>>,
     mut commands: Commands
@@ -152,7 +170,7 @@ pub fn generate_world(
             let pbr = PbrBundle {
                 transform: chunk_transform,
                 mesh: mesh_handle,
-                material: block_material_map.get(&GameBlockType::Ground).unwrap().clone(),
+                material: block_material.0.clone(),
                 ..default()
             };
 
