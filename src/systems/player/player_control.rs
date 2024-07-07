@@ -179,9 +179,9 @@ pub fn setup_player(
             combine_rule: CoefficientCombineRule::Min,
         },
         RigidBody::KinematicPositionBased,
-        Collider::cylinder(0.825, 0.5),
+        Collider::cylinder(0.825, 0.45),
         KinematicCharacterController {
-            snap_to_ground: Some(CharacterLength::Relative(0.5)),
+            snap_to_ground: None,
             autostep: Some(CharacterAutostep {
                 max_height: CharacterLength::Absolute(0.1),
                 ..default()
@@ -235,10 +235,6 @@ pub fn player_move(
                 _ => {
                     player_state.time_grounded_changed.tick(time.delta());
                 }
-            }
-
-            if player_state.grounded_state == PlayerGroundedEnum::Grounded {
-                player_state.last_velocity *= Vec3::X + Vec3::Z
             }
 
             for key in keys.get_pressed() {
@@ -403,10 +399,10 @@ pub fn cursor_grab(
     mut app_exit_events: ResMut<Events<AppExit>>,
     mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    if let Ok(_window) = primary_window.get_single_mut() {
+    if let Ok(mut window) = primary_window.get_single_mut() {
         if keys.just_pressed(key_bindings.toggle_grab_cursor) {
-            // toggle_grab_cursor(&mut window);
-            app_exit_events.send(AppExit);
+            toggle_grab_cursor(&mut window);
+            // app_exit_events.send(AppExit);
         }
     } else {
         warn!("Primary window not found for `cursor_grab`");

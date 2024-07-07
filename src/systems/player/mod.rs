@@ -38,7 +38,11 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn setup(mut commands: Commands) {
+fn setup(
+    mut commands: Commands,
+    mut meshes:  ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>
+) {
     info!("Inserting light in the world");
     commands.insert_resource(AmbientLight {
         brightness: 80.0,
@@ -52,22 +56,30 @@ fn setup(mut commands: Commands) {
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform {
-            translation: Vec3::new(0.0, 25.0, 0.0),
-            rotation: Quat::from_rotation_x(-PI / 4.),
-            ..default()
-        },
         // The default cascade config is designed to handle large scenes.
         // As this example has a much smaller world, we can tighten the shadow
         // bounds for better visual quality.
         cascade_shadow_config: CascadeShadowConfigBuilder {
             first_cascade_far_bound: 4.0,
-            maximum_distance: 10.0,
             ..default()
-        }
-        .into(),
+        }.into(),
+        transform: Transform {
+            translation: Vec3::new(0.0, 250.0, 0.0),
+            rotation: Quat::from_rotation_x(-PI / 4.),
+            ..default()
+        },
         ..default()
     });
+        // .insert(PbrBundle {
+        //     mesh: meshes.add(Mesh::from(Cuboid::new(1.0, 1.0, 1.0))),
+        //     material: materials.add(Color::rgb(0.9, 0.3, 0.6)),
+        //     transform: Transform {
+        //         translation: Vec3::new(0.0, 250.0, 0.0),
+        //         rotation: Quat::from_rotation_x(-PI / 4.),
+        //         ..default()
+        //     },
+        //     ..default()
+        // });
 }
 
 fn make_the_sun_move_around(
@@ -75,7 +87,7 @@ fn make_the_sun_move_around(
     mut query: Query<&mut Transform, With<DirectionalLight>>
 ) {
     for mut transform in query.iter_mut() {
-        let trans = Transform::from_xyz(0.0, 25.0, 0.0)
+        let trans = Transform::from_xyz(0.0, transform.translation.y, 0.0)
             .looking_at(Vec3::new(
                 (time.elapsed_seconds() / 100.0).cos() * 100.0,
                 0.0,

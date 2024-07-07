@@ -49,8 +49,10 @@ where P: Into<ChunkCoord> + Clone
     for x in 0..CHUNK_SIZE {
        for y in 0..CHUNK_SIZE {
             for z in 0..CHUNK_SIZE {
-                let px = (x as f64 / 20.0 + 0.1) + (coord.x as f64 * CHUNK_SIZE as f64 / 20.0);
-                let pz = (z as f64 / 20.0 + 0.1) + (coord.z as f64 * CHUNK_SIZE as f64 / 20.0);
+                let zoom = 10.0;
+
+                let px = (x as f64 / zoom + 0.1) + (coord.x as f64 * CHUNK_SIZE as f64 / zoom);
+                let pz = (z as f64 / zoom + 0.1) + (coord.z as f64 * CHUNK_SIZE as f64 / zoom);
 
                 // perlin.get gives an f64 value between -1 and 1
                 let height_value = height_perlin.get([px, pz]) + 1.0;
@@ -166,6 +168,26 @@ pub fn generate_world(
             let (indices, vertices) = render_indices_and_vertices(&game_parameters, &chunk);
 
             let mesh_handle = mesh_manager.add(render_mesh(&indices, &vertices));
+
+            for x in 0..game_parameters.chunk_size {
+                for y in 0..game_parameters.chunk_size {
+                    for z in 0..game_parameters.chunk_size {
+                        if let Some(block) = chunk.get_block(&(x, y, z)) {
+                            if !block.is_fully_surrounded && block.block_type != GameBlockType::Empty {
+                                let block_transform = Transform::from_xyz(
+                                    (chunk_coord.x * game_parameters.chunk_size + x) as f32,
+                                    (chunk_coord.y * game_parameters.chunk_size + y) as f32,
+                                    (chunk_coord.z * game_parameters.chunk_size + z) as f32
+                                );
+
+                                commands.spawn((
+                                    block_transform
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
 
             let pbr = PbrBundle {
                 transform: chunk_transform,

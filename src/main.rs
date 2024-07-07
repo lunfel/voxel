@@ -29,6 +29,7 @@ fn main() {
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(WorldPlugin)
+        .insert_resource(ClearColor(Color::rgb(0.4, 0.7, 0.85)))
         // .add_plugins(WorldInspectorPlugin::new())
         .init_resource::<BlockMaterialMap>()
         .init_resource::<BlockMaterial>()
