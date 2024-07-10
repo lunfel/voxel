@@ -83,7 +83,7 @@ macro_rules! point_neighbour_impl {
 point_neighbour_impl!(u8);
 point_neighbour_impl!(usize);
 point_neighbour_impl!(i8);
-point_neighbour_impl!(CoordSystemIntegerSize);
+point_neighbour_impl!(i32);
 impl From<Point3D<usize>> for Point3D<i8> {
     fn from(value: Point3D<usize>) -> Self {
         Self {

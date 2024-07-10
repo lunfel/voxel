@@ -5,7 +5,6 @@ mod utils;
 mod world;
 
 use crate::screen::ScreenPlugin;
-use crate::settings::GameParameters;
 use crate::systems::world_generation::{BlockMaterial, BlockMaterialMap};
 use crate::world::WorldPlugin;
 use bevy::{
@@ -17,7 +16,6 @@ use systems::{player::PlayerPlugin, world_generation::WorldGenerationPlugin};
 
 fn main() {
     App::new()
-        .init_resource::<GameParameters>()
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         // This slows down the game by a lot
         // .add_plugins(RapierDebugRenderPlugin::default())

@@ -173,7 +173,7 @@ pub fn setup_player(
         //     ..Default::default()
         // },
         GlobalTransform::default(),
-        Transform::from_xyz(8.0, 20.0, 8.0),
+        Transform::from_xyz(8.0, 100.0, 8.0),
         Friction {
             coefficient: 0.0,
             combine_rule: CoefficientCombineRule::Min,

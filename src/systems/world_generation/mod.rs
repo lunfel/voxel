@@ -1,3 +1,4 @@
+use std::ops::Mul;
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::utils::hashbrown::HashMap;
@@ -5,7 +6,7 @@ use noise::{NoiseFn, Perlin};
 use bevy_rapier3d::prelude::*;
 
 use crate::{settings::CHUNK_SIZE, world::{block::GameBlockType, chunk::GameChunk}};
-use crate::settings::{CoordSystemIntegerSize, GameParameters};
+use crate::settings::{CHUNK_HEIGHT, CoordSystemIntegerSize};
 use crate::utils::fresh_entity::FreshEntity;
 use crate::utils::point::Point3D;
 use crate::world::block::BlockCoord;
@@ -37,31 +38,58 @@ impl Plugin for WorldGenerationPlugin {
     }
 }
 
-pub fn generate_single_chunk<'a, P>(coord: &P) -> GameChunk
+#[derive(Deref, DerefMut, Clone, Copy)]
+pub struct PerlinCoord([f64; 2]);
+
+impl Mul<f64> for PerlinCoord {
+    type Output = [f64; 2];
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        return [
+            &self[0] * rhs,
+            &self[1] * rhs
+        ]
+    }
+}
+
+pub fn generate_single_chunk<P>(coord: &P) -> GameChunk
 where P: Into<ChunkCoord> + Clone
 {
+    let continentality_perlin = Perlin::new(10);
+    let continentality_frequency = 1.0 / 160.0;
+    let continentality_amplitude = 1.0;
+
     let height_perlin = Perlin::new(1);
+    let frequency1 = 1.0 / 40.0;
+    let amplitude1 = 30.0;
+
+    let height_perlin2 = Perlin::new(3);
+    let frequency2 = 1.0 / 15.0;
+    let amplitude2 = 15.0;
+
     let ground_layer_perlin = Perlin::new(2);
     let coord: ChunkCoord = (*coord).clone().into();
 
     let mut game_chunk = GameChunk::new();
 
-    for x in 0..CHUNK_SIZE {
-       for y in 0..CHUNK_SIZE {
-            for z in 0..CHUNK_SIZE {
-                let zoom = 10.0;
-
-                let px = (x as f64 / zoom + 0.1) + (coord.x as f64 * CHUNK_SIZE as f64 / zoom);
-                let pz = (z as f64 / zoom + 0.1) + (coord.z as f64 * CHUNK_SIZE as f64 / zoom);
+    for x in 0..(CHUNK_SIZE as usize) {
+       for y in 0..(CHUNK_HEIGHT as usize) {
+            for z in 0..(CHUNK_SIZE as usize) {
+                let perlin_coord = PerlinCoord([
+                    (x as f64  + 0.1) + (coord.x as f64 * CHUNK_SIZE as f64),
+                    (z as f64  + 0.1) + (coord.z as f64 * CHUNK_SIZE as f64)
+                ]);
 
                 // perlin.get gives an f64 value between -1 and 1
-                let height_value = height_perlin.get([px, pz]) + 1.0;
-                let height = (height_value * 6.0).round() as usize + 1;
+                let continentality_value = ((continentality_perlin.get(perlin_coord * continentality_frequency) + 1.0) / 2.0) * continentality_amplitude;
+                let height_value = ((height_perlin.get(perlin_coord * frequency1) + 1.0) / 2.0) * (amplitude1 * (continentality_value + 0.1));
+                let height_value2 = ((height_perlin2.get(perlin_coord * frequency2) + 1.0) / 2.0) * amplitude2 * (continentality_value + 0.1);
+                let height = (height_value + height_value2) as usize;
 
-                if height == y {
-                    game_chunk.blocks[x][y][z].block_type = if ground_layer_perlin.get([px, pz]) > 0.5 {
+                if height == (y as usize) {
+                    game_chunk.blocks[x][y][z].block_type = if ground_layer_perlin.get(perlin_coord.0) > 0.5 {
                         GameBlockType::Rock
-                    } else if ground_layer_perlin.get([px, pz]) > 0.4 {
+                    } else if ground_layer_perlin.get(perlin_coord.0) > 0.4 {
                         GameBlockType::Gem
                     } else {
                         GameBlockType::Ground
@@ -140,7 +168,6 @@ impl FromWorld for BlockMaterialMap {
 pub fn generate_world(
     mut world_generation_state: ResMut<WorldGenerationState>,
     block_material: Res<BlockMaterial>,
-    game_parameters: Res<GameParameters>,
     mut mesh_manager: ResMut<Assets<Mesh>>,
     mut commands: Commands
 ) {
@@ -156,28 +183,28 @@ pub fn generate_world(
             let chunk_coord: ChunkCoord = (x as CoordSystemIntegerSize, 0 as CoordSystemIntegerSize, z as CoordSystemIntegerSize).into();
 
             let chunk_transform = Transform::from_xyz(
-                (chunk_coord.x * game_parameters.chunk_size) as f32,
-                (chunk_coord.y * game_parameters.chunk_size) as f32,
-                (chunk_coord.z * game_parameters.chunk_size) as f32
+                (chunk_coord.x * CHUNK_SIZE) as f32,
+                (chunk_coord.y * CHUNK_HEIGHT) as f32,
+                (chunk_coord.z * CHUNK_SIZE) as f32
             );
 
             info!("Spawning chunks");
 
             let chunk = generate_single_chunk(&chunk_coord);
 
-            let (indices, vertices) = render_indices_and_vertices(&game_parameters, &chunk);
+            let (indices, vertices) = render_indices_and_vertices(&chunk);
 
             let mesh_handle = mesh_manager.add(render_mesh(&indices, &vertices));
 
-            for x in 0..game_parameters.chunk_size {
-                for y in 0..game_parameters.chunk_size {
-                    for z in 0..game_parameters.chunk_size {
+            for x in 0..CHUNK_SIZE {
+                for y in 0..CHUNK_HEIGHT{
+                    for z in 0..CHUNK_SIZE {
                         if let Some(block) = chunk.get_block(&(x, y, z)) {
                             if !block.is_fully_surrounded && block.block_type != GameBlockType::Empty {
                                 let block_transform = Transform::from_xyz(
-                                    (chunk_coord.x * game_parameters.chunk_size + x) as f32,
-                                    (chunk_coord.y * game_parameters.chunk_size + y) as f32,
-                                    (chunk_coord.z * game_parameters.chunk_size + z) as f32
+                                    (chunk_coord.x * CHUNK_SIZE + x) as f32,
+                                    (chunk_coord.y * CHUNK_HEIGHT + y) as f32,
+                                    (chunk_coord.z * CHUNK_SIZE + z) as f32
                                 );
 
                                 commands.spawn((
@@ -209,8 +236,8 @@ pub fn generate_world(
                             vec
                         })
                         .collect()
-                    }
-                };
+                }
+            };
 
             commands.spawn((
                 pbr,

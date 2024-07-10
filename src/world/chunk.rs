@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{settings::CHUNK_SIZE, utils::point::Point3D};
-use crate::settings::CoordSystemIntegerSize;
+use crate::settings::{CHUNK_HEIGHT, CoordSystemIntegerSize};
 use crate::world::block::BlockCoord;
 
 use super::block::GameBlock;
@@ -21,16 +21,22 @@ impl From<(CoordSystemIntegerSize, CoordSystemIntegerSize, CoordSystemIntegerSiz
     }
 }
 
-#[derive(Default, Deref, DerefMut)]
-pub struct ChunkBlocks([[[GameBlock; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE]);
+#[derive(Deref, DerefMut)]
+pub struct ChunkBlocks([[[GameBlock; CHUNK_SIZE as usize]; CHUNK_HEIGHT as usize]; CHUNK_SIZE as usize]);
+
+impl Default for ChunkBlocks {
+    fn default() -> Self {
+        return ChunkBlocks([[[GameBlock::default(); CHUNK_SIZE as usize]; CHUNK_HEIGHT as usize]; CHUNK_SIZE as usize]);
+    }
+}
 
 impl ChunkBlocks {
     pub fn blocks_with_coord(&self) -> Vec<(Point3D<i8>, &GameBlock)> {
-        let mut pairs: Vec<(Point3D<i8>, &GameBlock)> = Vec::with_capacity(CHUNK_SIZE*CHUNK_SIZE*CHUNK_SIZE);
+        let mut pairs: Vec<(Point3D<i8>, &GameBlock)> = Vec::with_capacity((CHUNK_SIZE*CHUNK_HEIGHT*CHUNK_SIZE) as usize);
 
-        for x in 0..CHUNK_SIZE {
-            for y in 0..CHUNK_SIZE {
-                for z in 0..CHUNK_SIZE {
+        for x in 0.. {
+            for y in 0..(CHUNK_HEIGHT as usize) {
+                for z in 0..(CHUNK_SIZE as usize) {
                     pairs.push(((x as i8, y as i8, z as i8).into(), &self.0[x][y][z]))
                 }
             }

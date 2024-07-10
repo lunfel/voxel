@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy_rapier3d::prelude::*;
-use crate::settings::{CoordSystemIntegerSize, GameParameters};
+use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize};
 use crate::systems::player::player_control::PlayerControl;
 use crate::systems::world_generation::{BlockMaterial, BlockMaterialMap};
 use crate::utils::cube::Cube;
@@ -33,7 +33,6 @@ pub fn load_chunks_dynamically(
 pub fn render_dirty_chunk(
     mut query: Query<(Entity, &mut GameChunk, &ChunkCoord, &mut Collider, &Handle<Mesh>)>,
     mut player_query: Query<(Entity, &PlayerControl, &Transform)>,
-    game_parameters: Res<GameParameters>,
     mut mesh_manager: ResMut<Assets<Mesh>>,
     block_material_mapping: Res<BlockMaterialMap>,
     block_material: Res<BlockMaterial>,
@@ -47,7 +46,7 @@ pub fn render_dirty_chunk(
         entity_commands.remove::<Handle<Mesh>>();
         mesh_manager.remove(mesh_handle);
 
-        let (indices, vertices) = render_indices_and_vertices(&game_parameters, chunk);
+        let (indices, vertices) = render_indices_and_vertices(chunk);
 
         let mesh = render_mesh(&indices, &vertices);
 
@@ -59,14 +58,14 @@ pub fn render_dirty_chunk(
     }
 }
 
-pub fn render_indices_and_vertices(game_parameters: &GameParameters, chunk: &GameChunk) -> (Indices, VertexBuffer) {
+pub fn render_indices_and_vertices(chunk: &GameChunk) -> (Indices, VertexBuffer) {
     let mut indices: Vec<u32> = vec![];
     let mut total_nb_faces: u32 = 0;
     let mut vertices: VertexBuffer = vec![];
 
-    for x in 0..game_parameters.chunk_size {
-        for y in 0..game_parameters.chunk_size {
-            for z in 0..game_parameters.chunk_size {
+    for x in 0..CHUNK_SIZE {
+        for y in 0..CHUNK_HEIGHT {
+            for z in 0..CHUNK_SIZE {
                 let block_coord: BlockCoord = (x, y, z).into();
                 if let Some(block) = chunk.get_block(&block_coord) {
                     match block.block_type {
