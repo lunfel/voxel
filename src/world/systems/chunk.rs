@@ -3,7 +3,7 @@ use bevy::render::mesh::{Indices, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy_rapier3d::prelude::*;
 use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize};
-use crate::systems::player::player_control::PlayerControl;
+use crate::player::control::PlayerControl;
 use crate::utils::cube::Cube;
 use crate::world::block::{BlockCoord, GameBlockType};
 use crate::world::chunk::{ChunkCoord, GameChunk, UV, VertexBuffer};

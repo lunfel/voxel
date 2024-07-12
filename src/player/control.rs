@@ -282,14 +282,14 @@ pub fn player_move(
 
             let final_vel = move_velocity
                 + if just_started_jumping {
-                    // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
-                    Vec3::new(0.0, jump_vel, 0.0)
-                } else {
-                    let grav = Vec3::new(0.0, -9.81, 0.0);
-                    let delta = time.delta_seconds();
-                    // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
-                    v0_y + grav * delta
-                };
+                // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
+                Vec3::new(0.0, jump_vel, 0.0)
+            } else {
+                let grav = Vec3::new(0.0, -9.81, 0.0);
+                let delta = time.delta_seconds();
+                // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
+                v0_y + grav * delta
+            };
 
             player_state.last_velocity = final_vel;
 

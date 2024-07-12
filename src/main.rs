@@ -1,8 +1,8 @@
 mod screen;
 mod settings;
-mod systems;
 mod utils;
 mod world;
+mod player;
 
 use crate::screen::ScreenPlugin;
 use crate::world::WorldPlugin;
@@ -11,7 +11,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_rapier3d::prelude::*;
-use systems::player::PlayerPlugin;
+use player::PlayerPlugin;
 use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
 
 fn main() {

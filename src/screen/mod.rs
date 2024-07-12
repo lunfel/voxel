@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::window::WindowMode;
 
-use crate::systems::player::player_control::{KeyBindings, toggle_grab_cursor};
+use crate::player::control::{KeyBindings, toggle_grab_cursor};
 
 pub struct ScreenPlugin;
 

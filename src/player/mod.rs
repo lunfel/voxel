@@ -1,17 +1,17 @@
-pub mod player_control;
+pub mod control;
 
 use std::f32::consts::PI;
 
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 
-use crate::systems::{
-    player::player_control::{
+use crate::{
+    player::control::{
         cursor_grab, follow_player_look_left_right, initial_grab_cursor, player_look, player_move,
         setup_player, InputState, JumpTimer, KeyBindings, MovementSettings,
     }
 };
-use crate::systems::player::player_control::{follow_player_look_up_down, follow_player_position};
+use crate::player::control::{follow_player_look_up_down, follow_player_position};
 use crate::world::world_generation::generate_world;
 
 pub struct PlayerPlugin;
@@ -70,16 +70,16 @@ fn setup(
         },
         ..default()
     });
-        // .insert(PbrBundle {
-        //     mesh: meshes.add(Mesh::from(Cuboid::new(1.0, 1.0, 1.0))),
-        //     material: materials.add(Color::rgb(0.9, 0.3, 0.6)),
-        //     transform: Transform {
-        //         translation: Vec3::new(0.0, 250.0, 0.0),
-        //         rotation: Quat::from_rotation_x(-PI / 4.),
-        //         ..default()
-        //     },
-        //     ..default()
-        // });
+    // .insert(PbrBundle {
+    //     mesh: meshes.add(Mesh::from(Cuboid::new(1.0, 1.0, 1.0))),
+    //     material: materials.add(Color::rgb(0.9, 0.3, 0.6)),
+    //     transform: Transform {
+    //         translation: Vec3::new(0.0, 250.0, 0.0),
+    //         rotation: Quat::from_rotation_x(-PI / 4.),
+    //         ..default()
+    //     },
+    //     ..default()
+    // });
 }
 
 fn make_the_sun_move_around(

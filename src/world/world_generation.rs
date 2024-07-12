@@ -182,7 +182,7 @@ where P: Into<ChunkCoord> + Clone
                 let height_value2 = ((height_perlin2.get(perlin_coord * frequency2) + 1.0) / 2.0) * amplitude2 * (continentality_value + 0.1);
                 let height = (height_value + height_value2) as usize;
 
-                if height == (y as usize) {
+                if height == y {
                     game_chunk.blocks[x][y][z].block_type = if ground_layer_perlin.get(perlin_coord.0) > 0.5 {
                         GameBlockType::Rock
                     } else if ground_layer_perlin.get(perlin_coord.0) > 0.4 {
