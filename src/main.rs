@@ -5,14 +5,14 @@ mod utils;
 mod world;
 
 use crate::screen::ScreenPlugin;
-use crate::systems::world_generation::{BlockMaterial, BlockMaterialMap};
 use crate::world::WorldPlugin;
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
 };
 use bevy_rapier3d::prelude::*;
-use systems::{player::PlayerPlugin, world_generation::WorldGenerationPlugin};
+use systems::player::PlayerPlugin;
+use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
 
 fn main() {
     App::new()

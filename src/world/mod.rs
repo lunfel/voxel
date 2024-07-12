@@ -8,6 +8,7 @@ pub mod block;
 pub mod chunk;
 pub mod systems;
 pub mod game_world;
+pub mod world_generation;
 
 pub struct WorldPlugin;
 

@@ -9,10 +9,10 @@ use crate::systems::{
     player::player_control::{
         cursor_grab, follow_player_look_left_right, initial_grab_cursor, player_look, player_move,
         setup_player, InputState, JumpTimer, KeyBindings, MovementSettings,
-    },
-    world_generation::generate_world,
+    }
 };
 use crate::systems::player::player_control::{follow_player_look_up_down, follow_player_position};
+use crate::world::world_generation::generate_world;
 
 pub struct PlayerPlugin;
 

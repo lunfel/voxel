@@ -4,10 +4,10 @@ use bevy::render::render_asset::RenderAssetUsages;
 use bevy_rapier3d::prelude::*;
 use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize};
 use crate::systems::player::player_control::PlayerControl;
-use crate::systems::world_generation::{BlockMaterial, BlockMaterialMap};
 use crate::utils::cube::Cube;
 use crate::world::block::{BlockCoord, GameBlockType};
 use crate::world::chunk::{ChunkCoord, GameChunk, UV, VertexBuffer};
+use crate::world::world_generation::{BlockMaterial, BlockMaterialMap};
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct DebugColliderTimer(pub Timer);
