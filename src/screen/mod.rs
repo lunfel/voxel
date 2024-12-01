@@ -10,7 +10,7 @@ pub struct PreviousWindowMode(WindowMode);
 
 impl Default for PreviousWindowMode {
     fn default() -> Self {
-        PreviousWindowMode(WindowMode::BorderlessFullscreen)
+        PreviousWindowMode(WindowMode::BorderlessFullscreen(MonitorSelection::Primary))
     }
 }
 
@@ -22,7 +22,7 @@ fn toggle_fullscreen(
 ) {
     if let Ok((mut window, entity)) = window.get_single_mut() {
         if keys.just_pressed(key_bindings.toggle_fullscreen) {
-            window.mode = WindowMode::Fullscreen;
+            window.mode = WindowMode::Fullscreen(MonitorSelection::Primary);
 
             let width = window.width();
             let height = window.height();

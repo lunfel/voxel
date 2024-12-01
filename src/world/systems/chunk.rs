@@ -31,7 +31,7 @@ pub fn load_chunks_dynamically(
 }
 
 pub fn render_dirty_chunk(
-    mut query: Query<(Entity, &mut GameChunk, &ChunkCoord, &mut Collider, &Handle<Mesh>)>,
+    mut query: Query<(Entity, &mut GameChunk, &ChunkCoord, &mut Collider, &Mesh3d)>,
     mut player_query: Query<(Entity, &PlayerControl, &Transform)>,
     mut mesh_manager: ResMut<Assets<Mesh>>,
     block_material_mapping: Res<BlockMaterialMap>,
@@ -43,18 +43,16 @@ pub fn render_dirty_chunk(
         let mut entity_commands = commands.entity(entity);
 
         entity_commands.remove::<Collider>();
-        entity_commands.remove::<Handle<Mesh>>();
+        entity_commands.remove::<Mesh3d>();
         mesh_manager.remove(mesh_handle);
 
         let (indices, vertices) = render_indices_and_vertices(chunk);
 
         let mesh = render_mesh(&indices, &vertices);
 
-        let mesh_handle = mesh_manager.add(mesh);
+        let mesh_handle = Mesh3d(mesh_manager.add(mesh));
 
-        entity_commands.insert((
-            mesh_handle,
-        ));
+        entity_commands.insert(mesh_handle);
     }
 }
 
@@ -106,7 +104,8 @@ fn apply_uv_offset(uv: UV, offset: f32) -> UV {
 
 fn render_chunk_block(chunk: &GameChunk, coord: &BlockCoord, indices: &mut Vec<u32>, total_nb_faces: &mut u32, vertices: &mut VertexBuffer) {
     // suppose Y-up right hand, and camera look from +z to -z
-    let sp = shape::Box::new(1.0, 1.0, 1.0);
+    let sp = Cuboid::new(1.0, 1.0, 1.0);
+    // let sp = shape::Box::new(1.0, 1.0, 1.0);
 
     let indices_template = [0, 1, 2, 2, 3, 0];
 
@@ -123,55 +122,55 @@ fn render_chunk_block(chunk: &GameChunk, coord: &BlockCoord, indices: &mut Vec<u
         (
             coord.front_neighbor(),
             [
-                ([sp.min_x, sp.min_y, sp.max_z], [0., 0., 1.0], apply_uv_offset([0., 0.], uv_offset)),
-                ([sp.max_x, sp.min_y, sp.max_z], [0., 0., 1.0], apply_uv_offset([1.0, 0.], uv_offset)),
-                ([sp.max_x, sp.max_y, sp.max_z], [0., 0., 1.0], apply_uv_offset([1.0, 1.0], uv_offset)),
-                ([sp.min_x, sp.max_y, sp.max_z], [0., 0., 1.0], apply_uv_offset([0., 1.0], uv_offset))
+                ([-sp.half_size.x, -sp.half_size.y, sp.half_size.z], [0., 0., 1.0], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.half_size.x, -sp.half_size.y, sp.half_size.z], [0., 0., 1.0], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.half_size.x, sp.half_size.y, sp.half_size.z], [0., 0., 1.0], apply_uv_offset([1.0, 1.0], uv_offset)),
+                ([-sp.half_size.x, sp.half_size.y, sp.half_size.z], [0., 0., 1.0], apply_uv_offset([0., 1.0], uv_offset))
             ]
         ),
         (
             coord.back_neighbor(),
             [
-                ([sp.min_x, sp.max_y, sp.min_z], [0., 0., -1.0], apply_uv_offset([1.0, 0.], uv_offset)),
-                ([sp.max_x, sp.max_y, sp.min_z], [0., 0., -1.0], apply_uv_offset([0., 0.], uv_offset)),
-                ([sp.max_x, sp.min_y, sp.min_z], [0., 0., -1.0], apply_uv_offset([0., 1.0], uv_offset)),
-                ([sp.min_x, sp.min_y, sp.min_z], [0., 0., -1.0], apply_uv_offset([1.0, 1.0], uv_offset))
+                ([-sp.half_size.x, sp.half_size.y, -sp.half_size.z], [0., 0., -1.0], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.half_size.x, sp.half_size.y, -sp.half_size.z], [0., 0., -1.0], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.half_size.x, -sp.half_size.y, -sp.half_size.z], [0., 0., -1.0], apply_uv_offset([0., 1.0], uv_offset)),
+                ([-sp.half_size.x, -sp.half_size.y, -sp.half_size.z], [0., 0., -1.0], apply_uv_offset([1.0, 1.0], uv_offset))
             ]
         ),
         (
             coord.right_neighbor(),
             [
-                ([sp.max_x, sp.min_y, sp.min_z], [1.0, 0., 0.], apply_uv_offset([0., 0.], uv_offset)),
-                ([sp.max_x, sp.max_y, sp.min_z], [1.0, 0., 0.], apply_uv_offset([1.0, 0.], uv_offset)),
-                ([sp.max_x, sp.max_y, sp.max_z], [1.0, 0., 0.], apply_uv_offset([1.0, 1.0], uv_offset)),
-                ([sp.max_x, sp.min_y, sp.max_z], [1.0, 0., 0.], apply_uv_offset([0., 1.0], uv_offset))
+                ([sp.half_size.x, -sp.half_size.y, -sp.half_size.z], [1.0, 0., 0.], apply_uv_offset([0., 0.], uv_offset)),
+                ([sp.half_size.x, sp.half_size.y, -sp.half_size.z], [1.0, 0., 0.], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([sp.half_size.x, sp.half_size.y, sp.half_size.z], [1.0, 0., 0.], apply_uv_offset([1.0, 1.0], uv_offset)),
+                ([sp.half_size.x, -sp.half_size.y, sp.half_size.z], [1.0, 0., 0.], apply_uv_offset([0., 1.0], uv_offset))
             ]
         ),
         (
             coord.left_neighbor(),
             [
-                ([sp.min_x, sp.min_y, sp.max_z], [-1.0, 0., 0.], apply_uv_offset([1.0, 0.], uv_offset)),
-                ([sp.min_x, sp.max_y, sp.max_z], [-1.0, 0., 0.], apply_uv_offset([0., 0.], uv_offset)),
-                ([sp.min_x, sp.max_y, sp.min_z], [-1.0, 0., 0.], apply_uv_offset([0., 1.0], uv_offset)),
-                ([sp.min_x, sp.min_y, sp.min_z], [-1.0, 0., 0.], apply_uv_offset([1.0, 1.0], uv_offset))
+                ([-sp.half_size.x, -sp.half_size.y, sp.half_size.z], [-1.0, 0., 0.], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([-sp.half_size.x, sp.half_size.y, sp.half_size.z], [-1.0, 0., 0.], apply_uv_offset([0., 0.], uv_offset)),
+                ([-sp.half_size.x, sp.half_size.y, -sp.half_size.z], [-1.0, 0., 0.], apply_uv_offset([0., 1.0], uv_offset)),
+                ([-sp.half_size.x, -sp.half_size.y, -sp.half_size.z], [-1.0, 0., 0.], apply_uv_offset([1.0, 1.0], uv_offset))
             ]
         ),
         (
             coord.top_neighbor(),
             [
-                ([sp.max_x, sp.max_y, sp.min_z], [0., 1.0, 0.], apply_uv_offset([1.0, 0.], uv_offset)),
-                ([sp.min_x, sp.max_y, sp.min_z], [0., 1.0, 0.], apply_uv_offset([0., 0.], uv_offset)),
-                ([sp.min_x, sp.max_y, sp.max_z], [0., 1.0, 0.], apply_uv_offset([0., 1.0], uv_offset)),
-                ([sp.max_x, sp.max_y, sp.max_z], [0., 1.0, 0.], apply_uv_offset([1.0, 1.0], uv_offset))
+                ([sp.half_size.x, sp.half_size.y, -sp.half_size.z], [0., 1.0, 0.], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([-sp.half_size.x, sp.half_size.y, -sp.half_size.z], [0., 1.0, 0.], apply_uv_offset([0., 0.], uv_offset)),
+                ([-sp.half_size.x, sp.half_size.y, sp.half_size.z], [0., 1.0, 0.], apply_uv_offset([0., 1.0], uv_offset)),
+                ([sp.half_size.x, sp.half_size.y, sp.half_size.z], [0., 1.0, 0.], apply_uv_offset([1.0, 1.0], uv_offset))
             ]
         ),
         (
             coord.bottom_neighbor(),
             [
-                ([sp.max_x, sp.min_y, sp.max_z], [0., -1.0, 0.], apply_uv_offset([0., 0.], uv_offset)),
-                ([sp.min_x, sp.min_y, sp.max_z], [0., -1.0, 0.], apply_uv_offset([1.0, 0.], uv_offset)),
-                ([sp.min_x, sp.min_y, sp.min_z], [0., -1.0, 0.], apply_uv_offset([1.0, 1.0], uv_offset)),
-                ([sp.max_x, sp.min_y, sp.min_z], [0., -1.0, 0.], apply_uv_offset([0., 1.0], uv_offset))
+                ([sp.half_size.x, -sp.half_size.y, sp.half_size.z], [0., -1.0, 0.], apply_uv_offset([0., 0.], uv_offset)),
+                ([-sp.half_size.x, -sp.half_size.y, sp.half_size.z], [0., -1.0, 0.], apply_uv_offset([1.0, 0.], uv_offset)),
+                ([-sp.half_size.x, -sp.half_size.y, -sp.half_size.z], [0., -1.0, 0.], apply_uv_offset([1.0, 1.0], uv_offset)),
+                ([sp.half_size.x, -sp.half_size.y, -sp.half_size.z], [0., -1.0, 0.], apply_uv_offset([0., 1.0], uv_offset))
             ]
         )
     ];

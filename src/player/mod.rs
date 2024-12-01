@@ -1,4 +1,5 @@
 pub mod control;
+mod selection;
 
 use std::f32::consts::PI;
 
@@ -89,9 +90,9 @@ fn make_the_sun_move_around(
     for mut transform in query.iter_mut() {
         let trans = Transform::from_xyz(0.0, transform.translation.y, 0.0)
             .looking_at(Vec3::new(
-                (time.elapsed_seconds() / 100.0).cos() * 100.0,
+                (time.elapsed_secs() / 100.0).cos() * 100.0,
                 0.0,
-                (time.elapsed_seconds() / 100.0).sin() * 100.0,
+                (time.elapsed_secs() / 100.0).sin() * 100.0,
             ), Vec3::Y);
 
         transform.translation = trans.translation;

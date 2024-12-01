@@ -4,12 +4,13 @@ use bevy::asset::{Assets, AssetServer, Handle};
 use bevy::log::info;
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
-use bevy::prelude::{Color, Commands, default, Deref, DerefMut, FromWorld, Mesh, Res, ResMut, Resource, Transform, World};
+use bevy::prelude::{Color, Commands, default, Deref, DerefMut, FromWorld, Mesh, Res, ResMut, Resource, Transform, World, Mesh3d, MeshMaterial3d};
 use bevy::render::mesh::Indices;
 use bevy::utils::hashbrown::HashMap;
 use bevy_rapier3d::dynamics::RigidBody;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::math::Vect;
+use bevy_rapier3d::parry::transformation::utils::transform;
 use noise::{NoiseFn, Perlin};
 use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize};
 use crate::utils::fresh_entity::FreshEntity;
@@ -52,7 +53,7 @@ pub fn generate_world(
     // Let's assume player is at 0,0,0 for now
 
     let player_position: Point3D<i32> = Point3D::default();
-    let dimension = 16;
+    let dimension = 4;
 
     for x in player_position.x - dimension..player_position.x + dimension {
         for z in player_position.z - dimension..player_position.z + dimension {
@@ -70,7 +71,7 @@ pub fn generate_world(
 
             let (indices, vertices) = render_indices_and_vertices(&chunk);
 
-            let mesh_handle = mesh_manager.add(render_mesh(&indices, &vertices));
+            let mesh_handle = Mesh3d(mesh_manager.add(render_mesh(&indices, &vertices)));
 
             for x in 0..CHUNK_SIZE {
                 for y in 0..CHUNK_HEIGHT{
@@ -92,13 +93,6 @@ pub fn generate_world(
                 }
             }
 
-            let pbr = PbrBundle {
-                transform: chunk_transform,
-                mesh: mesh_handle,
-                material: block_material.0.clone(),
-                ..default()
-            };
-
             let v: Vec<Vect> = vertices.iter().map(|(v, _, _)| Vec3::from_array(*v)).collect();
             let i: Vec<[u32; 3]> = match indices {
                 Indices::U16(_) => unimplemented!("Not used by the game"),
@@ -116,7 +110,9 @@ pub fn generate_world(
             };
 
             commands.spawn((
-                pbr,
+                chunk_transform,
+                mesh_handle,
+                MeshMaterial3d(block_material.0.clone()),
                 chunk,
                 chunk_coord,
                 RigidBody::Fixed,

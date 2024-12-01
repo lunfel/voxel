@@ -2,7 +2,7 @@ use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
 };
-use bevy::render::texture::{ImageFilterMode, ImageSamplerDescriptor};
+use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
 use bevy_rapier3d::prelude::*;
 
 use player::PlayerPlugin;

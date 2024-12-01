@@ -2,12 +2,12 @@ use std::ops::{Deref, DerefMut};
 
 use bevy::{
     app::AppExit,
-    ecs::event::ManualEventReader,
     input::mouse::MouseMotion,
     prelude::*,
     time::Stopwatch,
     window::{CursorGrabMode, PrimaryWindow},
 };
+use bevy::ecs::event::EventCursor;
 use bevy_rapier3d::{
     control::CharacterAutostep,
     prelude::{
@@ -20,7 +20,7 @@ use crate::settings::CHUNK_SIZE;
 
 #[derive(Resource, Default)]
 pub struct InputState {
-    reader_motion: ManualEventReader<MouseMotion>,
+    reader_motion: EventCursor<MouseMotion>,
 }
 
 #[derive(Resource)]
@@ -50,7 +50,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.00012,
-            speed: 5.0, // Used to be 5
+            speed: 7.0, // Used to be 5
         }
     }
 }
@@ -147,7 +147,7 @@ pub fn setup_player(
             ),
             ..default()
         },
-        FogSettings {
+        DistanceFog {
             color: Color::rgba(0.5, 0.5, 0.5, 0.7),
             falloff: FogFalloff::Linear {
                 start: 100.0,
@@ -238,7 +238,7 @@ pub fn player_move(
             }
 
             for key in keys.get_pressed() {
-                match window.cursor.grab_mode {
+                match window.cursor_options.grab_mode {
                     CursorGrabMode::None => (),
                     _ => {
                         let key = *key;
@@ -264,7 +264,7 @@ pub fn player_move(
 
             // let mut jump_timer: &mut Option<_> = &mut jump_timer;
             for key in keys.get_just_pressed() {
-                match window.cursor.grab_mode {
+                match window.cursor_options.grab_mode {
                     CursorGrabMode::None => (),
                     _ => {
                         let key = *key;
@@ -286,14 +286,14 @@ pub fn player_move(
                 Vec3::new(0.0, jump_vel, 0.0)
             } else {
                 let grav = Vec3::new(0.0, -9.81, 0.0);
-                let delta = time.delta_seconds();
+                let delta = time.delta_secs();
                 // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
                 v0_y + grav * delta
             };
 
             player_state.last_velocity = final_vel;
 
-            character_controller.translation = Some(final_vel * time.delta_seconds());
+            character_controller.translation = Some(final_vel * time.delta_secs());
         }
     }
 }
@@ -309,7 +309,7 @@ pub fn player_look(
         for mut transform in query.iter_mut() {
             for ev in state.reader_motion.read(&motion) {
                 let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
-                match window.cursor.grab_mode {
+                match window.cursor_options.grab_mode {
                     CursorGrabMode::None => (),
                     _ => {
                         let window_scale = window.height().min(window.width());
@@ -381,14 +381,14 @@ pub fn initial_grab_cursor(mut primary_window: Query<&mut Window, With<PrimaryWi
 }
 
 pub fn toggle_grab_cursor(window: &mut Window) {
-    match window.cursor.grab_mode {
+    match window.cursor_options.grab_mode {
         CursorGrabMode::None => {
-            window.cursor.grab_mode = CursorGrabMode::Confined;
-            window.cursor.visible = false;
+            window.cursor_options.grab_mode = CursorGrabMode::Confined;
+            window.cursor_options.visible = false;
         }
         _ => {
-            window.cursor.grab_mode = CursorGrabMode::None;
-            window.cursor.visible = true;
+            window.cursor_options.grab_mode = CursorGrabMode::None;
+            window.cursor_options.visible = true;
         }
     }
 }

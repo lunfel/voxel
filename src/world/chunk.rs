@@ -26,7 +26,7 @@ pub struct ChunkBlocks([[[GameBlock; CHUNK_SIZE as usize]; CHUNK_HEIGHT as usize
 
 impl Default for ChunkBlocks {
     fn default() -> Self {
-        return ChunkBlocks([[[GameBlock::default(); CHUNK_SIZE as usize]; CHUNK_HEIGHT as usize]; CHUNK_SIZE as usize]);
+        ChunkBlocks([[[GameBlock::default(); CHUNK_SIZE as usize]; CHUNK_HEIGHT as usize]; CHUNK_SIZE as usize])
     }
 }
 
