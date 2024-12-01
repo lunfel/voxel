@@ -152,16 +152,16 @@ pub fn generate_single_chunk<P>(coord: &P) -> GameChunk
 where P: Into<ChunkCoord> + Clone
 {
     let continentality_perlin = Perlin::new(10);
-    let continentality_frequency = 1.0 / 160.0;
+    let continentality_frequency = 1.0 / 180.0;
     let continentality_amplitude = 1.0;
 
     let height_perlin = Perlin::new(1);
     let frequency1 = 1.0 / 40.0;
-    let amplitude1 = 30.0;
+    let amplitude1 = 50.0;
 
     let height_perlin2 = Perlin::new(3);
     let frequency2 = 1.0 / 15.0;
-    let amplitude2 = 15.0;
+    let amplitude2 = 25.0;
 
     let ground_layer_perlin = Perlin::new(2);
     let coord: ChunkCoord = (*coord).clone().into();
@@ -238,7 +238,7 @@ pub struct BlockMaterial(Handle<StandardMaterial>);
 impl FromWorld for BlockMaterial {
     fn from_world(world: &mut World) -> Self {
         let mut asset_server = world.resource_mut::<AssetServer>();
-        let handle_image = asset_server.load("block-textures.png");
+        let handle_image = asset_server.load("atlas.png");
 
         let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
 

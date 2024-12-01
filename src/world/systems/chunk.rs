@@ -113,9 +113,9 @@ fn render_chunk_block(chunk: &GameChunk, coord: &BlockCoord, indices: &mut Vec<u
     let block = chunk.get_block(coord).expect("A block was expected here, but no block found");
 
     let uv_offset = match block.block_type {
-        GameBlockType::Rock => 0.25,
-        GameBlockType::Ground => 0.50,
-        GameBlockType::Gem => 0.75,
+        GameBlockType::Rock => 0.50,
+        GameBlockType::Ground => 0.00,
+        GameBlockType::Gem => 0.00,
         _ => 0.00
     };
 

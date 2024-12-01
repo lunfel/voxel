@@ -20,8 +20,6 @@ fn toggle_fullscreen(
     mut window: Query<(&mut Window, Entity)>,
     mut focused_event: EventWriter<CursorMoved>,
 ) {
-    // Ça crash souvent et je sais pas comment le régler. C'est lorsque la souris sort
-    // des limites de la fenêtre.
     if let Ok((mut window, entity)) = window.get_single_mut() {
         if keys.just_pressed(key_bindings.toggle_fullscreen) {
             window.mode = WindowMode::Fullscreen;

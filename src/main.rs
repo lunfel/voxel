@@ -1,25 +1,38 @@
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    prelude::*,
+};
+use bevy::render::texture::{ImageFilterMode, ImageSamplerDescriptor};
+use bevy_rapier3d::prelude::*;
+
+use player::PlayerPlugin;
+
+use crate::screen::ScreenPlugin;
+use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
+use crate::world::WorldPlugin;
+
 mod screen;
 mod settings;
 mod utils;
 mod world;
 mod player;
 
-use crate::screen::ScreenPlugin;
-use crate::world::WorldPlugin;
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    prelude::*,
-};
-use bevy_rapier3d::prelude::*;
-use player::PlayerPlugin;
-use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
-
 fn main() {
     App::new()
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         // This slows down the game by a lot
         // .add_plugins(RapierDebugRenderPlugin::default())
-        .add_plugins(DefaultPlugins)
+        // .add_plugins(DefaultPlugins)
+        // https://github.com/bevyengine/bevy/discussions/1289#discussioncomment-304058
+        // https://github.com/bevyengine/bevy/issues/8846#issue-1757760152
+        .add_plugins(
+            DefaultPlugins.set(ImagePlugin {
+                default_sampler: ImageSamplerDescriptor {
+                    min_filter: ImageFilterMode::Nearest,
+                    ..default()
+                }
+            })
+        )
         .add_plugins(WorldGenerationPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(ScreenPlugin)
