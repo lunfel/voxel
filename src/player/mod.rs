@@ -1,5 +1,5 @@
 pub mod control;
-mod selection;
+pub mod selection;
 
 use std::f32::consts::PI;
 
@@ -14,6 +14,7 @@ use crate::{
 };
 use crate::player::control::{follow_player_look_up_down, follow_player_position};
 use crate::world::world_generation::generate_world;
+use crate::player::selection::select_block;
 
 pub struct PlayerPlugin;
 
@@ -33,7 +34,8 @@ impl Plugin for PlayerPlugin {
             .add_systems(Update, follow_player_look_left_right)
             .add_systems(Update, follow_player_look_up_down)
             .add_systems(Update, follow_player_position)
-            .add_systems(Update, cursor_grab);
+            .add_systems(Update, cursor_grab)
+            .add_systems(Update, select_block);
 
         info!("PlayerPlugin loaded");
     }

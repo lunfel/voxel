@@ -7,7 +7,10 @@ use bevy::{
     time::Stopwatch,
     window::{CursorGrabMode, PrimaryWindow},
 };
+use bevy::core_pipeline::core_3d::Camera3dDepthLoadOp;
 use bevy::ecs::event::EventCursor;
+use bevy::prelude::Camera;
+use bevy::render::view::RenderLayers;
 use bevy_rapier3d::{
     control::CharacterAutostep,
     prelude::{
@@ -136,15 +139,17 @@ pub fn setup_player(
         FollowsPlayerLookLeftRight,
         FollowsPlayerLookUpDown,
         FollowsPlayerPosition,
-        Camera3dBundle {
-            transform: Transform::from_xyz(5.0, 13.0, 5.0).looking_at(
-                Vec3 {
-                    z: CHUNK_SIZE as f32 / 2.0,
-                    x: CHUNK_SIZE as f32 / 2.0,
-                    ..default()
-                },
-                Vec3::Y,
-            ),
+        Transform::from_xyz(5.0, 13.0, 5.0).looking_at(
+            Vec3 {
+                z: CHUNK_SIZE as f32 / 2.0,
+                x: CHUNK_SIZE as f32 / 2.0,
+                ..default()
+            },
+            Vec3::Y,
+        ),
+        Camera3d::default(),
+        Camera {
+            order: 0,
             ..default()
         },
         DistanceFog {
