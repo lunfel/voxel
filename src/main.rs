@@ -7,7 +7,7 @@ use bevy::pbr::wireframe::WireframePlugin;
 use bevy_rapier3d::prelude::*;
 
 use player::PlayerPlugin;
-use crate::player::selection::{select_block, setup_selection, SelectionPlugin};
+use crate::player::selection::SelectionPlugin;
 use crate::screen::ScreenPlugin;
 use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
 use crate::world::WorldPlugin;
@@ -39,11 +39,11 @@ fn main() {
         .add_plugins(ScreenPlugin)
         .add_systems(Startup, setup_physics)
         .add_plugins(LogDiagnosticsPlugin::default())
-        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(WireframePlugin)
         .add_plugins(SelectionPlugin)
-        .insert_resource(ClearColor(Color::rgb(0.4, 0.7, 0.85)))
+        .insert_resource(ClearColor(Color::srgba(0.4, 0.7, 0.85, 1.0)))
         // .add_plugins(WorldInspectorPlugin::new())
         .init_resource::<BlockMaterialMap>()
         .init_resource::<BlockMaterial>()
@@ -56,5 +56,5 @@ fn setup_physics(mut commands: Commands) {
         .spawn(RigidBody::Dynamic)
         .insert(Collider::ball(0.5))
         .insert(Restitution::coefficient(0.1))
-        .insert(TransformBundle::from(Transform::from_xyz(16.0, 20.0, 16.0)));
+        .insert(Transform::from_xyz(16.0, 20.0, 16.0));
 }

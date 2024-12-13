@@ -1,7 +1,5 @@
 use crate::player::control::{FollowsPlayerLookLeftRight, FollowsPlayerLookUpDown, FollowsPlayerPosition, PlayerControl, PlayerEyes};
 use crate::settings::CHUNK_SIZE;
-use bevy::color::palettes::basic::RED;
-use bevy::color::palettes::css::LIME;
 use bevy::math::Vec3;
 use bevy::pbr::wireframe::{Wireframe, WireframeColor};
 use bevy::prelude::*;
@@ -95,7 +93,7 @@ pub fn select_block(
 
         let transform: Vec3 = hit_point - (intersection.normal / 100.0);
 
-        let (mut selection_transform) = selection_block_query.single_mut();
+        let mut selection_transform = selection_block_query.single_mut();
 
         selection_transform.translation = transform.map(|c| c.round());
 

@@ -3,14 +3,13 @@ use bevy::app::{App, Plugin, Startup};
 use bevy::asset::{Assets, AssetServer, Handle};
 use bevy::log::info;
 use bevy::math::Vec3;
-use bevy::pbr::{PbrBundle, StandardMaterial};
-use bevy::prelude::{Color, Commands, default, Deref, DerefMut, FromWorld, Mesh, Res, ResMut, Resource, Transform, World, Mesh3d, MeshMaterial3d};
+use bevy::pbr::StandardMaterial;
+use bevy::prelude::{Color, Commands, Deref, DerefMut, FromWorld, Mesh, Res, ResMut, Resource, Transform, World, Mesh3d, MeshMaterial3d};
 use bevy::render::mesh::Indices;
 use bevy::utils::hashbrown::HashMap;
 use bevy_rapier3d::dynamics::RigidBody;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::math::Vect;
-use bevy_rapier3d::parry::transformation::utils::transform;
 use noise::{NoiseFn, Perlin};
 use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize};
 use crate::utils::fresh_entity::FreshEntity;
@@ -19,17 +18,9 @@ use crate::world::block::{BlockCoord, GameBlockType};
 use crate::world::chunk::{ChunkCoord, GameChunk};
 use crate::world::systems::chunk::{render_indices_and_vertices, render_mesh};
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct WorldGenerationState {
     pub finished_generating: bool
-}
-
-impl Default for WorldGenerationState {
-    fn default() -> Self {
-        Self {
-            finished_generating: false
-        }
-    }
 }
 
 impl Plugin for WorldGenerationPlugin {
@@ -84,9 +75,7 @@ pub fn generate_world(
                                     (chunk_coord.z * CHUNK_SIZE + z) as f32
                                 );
 
-                                commands.spawn((
-                                    block_transform
-                                ));
+                                commands.spawn(block_transform);
                             }
                         }
                     }
@@ -233,7 +222,7 @@ pub struct BlockMaterial(Handle<StandardMaterial>);
 
 impl FromWorld for BlockMaterial {
     fn from_world(world: &mut World) -> Self {
-        let mut asset_server = world.resource_mut::<AssetServer>();
+        let asset_server = world.resource_mut::<AssetServer>();
         let handle_image = asset_server.load("atlas.png");
 
         let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
@@ -250,8 +239,8 @@ impl FromWorld for BlockMaterialMap {
 
         let mut material_map: BlockMaterialHashMap = HashMap::new();
 
-        material_map.insert(GameBlockType::Rock, materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0)));
-        material_map.insert(GameBlockType::Ground, materials.add(Color::rgb(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0)));
+        material_map.insert(GameBlockType::Rock, materials.add(Color::srgba(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0, 1.0)));
+        material_map.insert(GameBlockType::Ground, materials.add(Color::srgba(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0, 1.0)));
 
         Self(material_map)
     }

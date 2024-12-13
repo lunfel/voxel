@@ -1,5 +1,4 @@
 use std::cmp::{max, min};
-use crate::settings::CoordSystemIntegerSize;
 use crate::utils::cube::Cube;
 
 #[derive(Default, PartialEq, Eq, Hash, Clone)]

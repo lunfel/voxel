@@ -7,10 +7,8 @@ use bevy::{
     time::Stopwatch,
     window::{CursorGrabMode, PrimaryWindow},
 };
-use bevy::core_pipeline::core_3d::Camera3dDepthLoadOp;
 use bevy::ecs::event::EventCursor;
 use bevy::prelude::Camera;
-use bevy::render::view::RenderLayers;
 use bevy_rapier3d::{
     control::CharacterAutostep,
     prelude::{
@@ -119,8 +117,6 @@ pub struct PlayerState {
 
 pub fn setup_player(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     info!("Setup player");
 
@@ -153,7 +149,7 @@ pub fn setup_player(
             ..default()
         },
         DistanceFog {
-            color: Color::rgba(0.5, 0.5, 0.5, 0.7),
+            color: Color::srgba(0.5, 0.5, 0.5, 0.7),
             falloff: FogFalloff::Linear {
                 start: 100.0,
                 end: 125.0,
@@ -167,16 +163,6 @@ pub fn setup_player(
         PlayerControl,
         FollowsPlayerLookLeftRight,
         PlayerState::default(),
-        // PbrBundle {
-        //     mesh: meshes.add(Mesh::from(shape::Cylinder {
-        //         height: 1.65,
-        //         radius: 0.5,
-        //         ..Default::default()
-        //     })),
-        //     material: materials.add(Color::rgb(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0).into()),
-        //     transform: Transform::from_xyz(8.0, 20.0, 8.0),
-        //     ..Default::default()
-        // },
         GlobalTransform::default(),
         Transform::from_xyz(8.0, 100.0, 8.0),
         Friction {

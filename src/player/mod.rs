@@ -2,7 +2,6 @@ pub mod control;
 pub mod selection;
 
 use std::f32::consts::PI;
-
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
 
@@ -42,47 +41,31 @@ impl Plugin for PlayerPlugin {
 }
 
 fn setup(
-    mut commands: Commands,
-    mut meshes:  ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>
+    mut commands: Commands
 ) {
     info!("Inserting light in the world");
     commands.insert_resource(AmbientLight {
         brightness: 80.0,
         ..default()
     });
-
+    
     // directional 'sun' light
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             illuminance: 10000.0,
             shadows_enabled: true,
             ..default()
         },
-        // The default cascade config is designed to handle large scenes.
-        // As this example has a much smaller world, we can tighten the shadow
-        // bounds for better visual quality.
-        cascade_shadow_config: CascadeShadowConfigBuilder {
+        CascadeShadowConfigBuilder {
             first_cascade_far_bound: 4.0,
             ..default()
-        }.into(),
-        transform: Transform {
+        }.build(),
+        Transform {
             translation: Vec3::new(0.0, 250.0, 0.0),
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
-        },
-        ..default()
-    });
-    // .insert(PbrBundle {
-    //     mesh: meshes.add(Mesh::from(Cuboid::new(1.0, 1.0, 1.0))),
-    //     material: materials.add(Color::rgb(0.9, 0.3, 0.6)),
-    //     transform: Transform {
-    //         translation: Vec3::new(0.0, 250.0, 0.0),
-    //         rotation: Quat::from_rotation_x(-PI / 4.),
-    //         ..default()
-    //     },
-    //     ..default()
-    // });
+        }
+    ));
 }
 
 fn make_the_sun_move_around(

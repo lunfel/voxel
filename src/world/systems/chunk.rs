@@ -196,7 +196,6 @@ fn render_chunk_block(chunk: &GameChunk, coord: &BlockCoord, indices: &mut Vec<u
                 .for_each(|(position, normals, uv)| {
                     let v: [f32; 3] = position.iter()
                         .zip(block_offset)
-                        .into_iter()
                         .map(|(v, offset)| v + offset)
                         .collect::<Vec<_>>()
                         .try_into()
