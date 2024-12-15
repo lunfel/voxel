@@ -4,9 +4,11 @@ use bevy::{
     prelude::*,
 };
 use bevy::pbr::wireframe::WireframePlugin;
+use bevy::text::cosmic_text::Selection;
 use bevy_rapier3d::prelude::*;
 
 use player::PlayerPlugin;
+use crate::logging::LoggingPlugin;
 use crate::player::selection::SelectionPlugin;
 use crate::screen::ScreenPlugin;
 use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
@@ -17,6 +19,7 @@ mod settings;
 mod utils;
 mod world;
 mod player;
+mod logging;
 
 fn main() {
     App::new()
@@ -43,6 +46,7 @@ fn main() {
         .add_plugins(WorldPlugin)
         .add_plugins(WireframePlugin)
         .add_plugins(SelectionPlugin)
+        .add_plugins(LoggingPlugin)
         .insert_resource(ClearColor(Color::srgba(0.4, 0.7, 0.85, 1.0)))
         // .add_plugins(WorldInspectorPlugin::new())
         .init_resource::<BlockMaterialMap>()

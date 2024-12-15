@@ -16,7 +16,7 @@ use bevy_rapier3d::{
         KinematicCharacterControllerOutput, RigidBody,
     },
 };
-
+use crate::logging::LogIntervalTimer;
 use crate::settings::CHUNK_SIZE;
 
 #[derive(Resource, Default)]
@@ -111,8 +111,7 @@ pub enum PlayerGroundedEnum {
 pub struct PlayerState {
     pub grounded_state: PlayerGroundedEnum,
     pub time_grounded_changed: Stopwatch,
-    pub last_velocity: Vec3,
-    pub is_jumping: bool,
+    pub last_velocity: Vec3
 }
 
 pub fn setup_player(
@@ -198,17 +197,17 @@ pub fn player_move(
         ),
         With<PlayerControl>,
     >,
+    log_interval: Res<LogIntervalTimer>
 ) {
+    if log_interval.just_finished() {
+        info!("Debug interval timer");
+    }
+
     if let Ok(window) = primary_window.get_single() {
         for (transform, mut character_controller, character_output, mut player_state) in
             query.iter_mut()
         {
             let mut move_velocity = Vec3::ZERO;
-            let local_z = transform.local_z();
-            let local_y = transform.local_y();
-            let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
-            let right = Vec3::new(local_z.z, 0.0, -local_z.x);
-            let upward = Vec3::new(0.0, local_y.y, 0.0);
             // let jump = Vec3::new(0.0, 2.0, 0.0);
             let jump_vel = 4.5;
             let mut just_started_jumping = false;
@@ -223,8 +222,11 @@ pub fn player_move(
                     player_state.grounded_state = PlayerGroundedEnum::NonGrounded;
                     player_state.time_grounded_changed.reset();
                 }
-                _ => {
+                (true, PlayerGroundedEnum::Grounded) => {
                     player_state.time_grounded_changed.tick(time.delta());
+                }
+                (false, PlayerGroundedEnum::NonGrounded) => {
+                    player_state.time_grounded_changed.reset();
                 }
             }
 
@@ -234,18 +236,12 @@ pub fn player_move(
                     _ => {
                         let key = *key;
 
-                        if key == key_bindings.move_forward {
-                            move_velocity += forward;
-                        } else if key == key_bindings.move_backward {
-                            move_velocity -= forward;
-                        } else if key == key_bindings.move_left {
-                            move_velocity -= right;
-                        } else if key == key_bindings.move_right {
-                            move_velocity += right;
-                        } else if key == key_bindings.move_downward {
-                            move_velocity -= upward;
-                        } else if key == key_bindings.move_upward {
-                            move_velocity += upward;
+                        if player_state.grounded_state == PlayerGroundedEnum::Grounded {
+                            move_velocity += apply_movement(&key_bindings, transform, key);
+                        } else {
+                            let air_locked_velocity = player_state.last_velocity * Vec3::new(1.0, 0.0, 1.0); // Continuer d'appliquer le mouvement x & z dans les airs
+
+                            move_velocity += air_locked_velocity;
                         }
                     }
                 }
@@ -262,7 +258,6 @@ pub fn player_move(
 
                         if key == key_bindings.jump && character_output.grounded {
                             // jump_timer.get_or_insert(Timer::from_seconds(0.5, TimerMode::Once));
-                            player_state.is_jumping = true;
                             just_started_jumping = true;
                         }
                     }
@@ -276,7 +271,10 @@ pub fn player_move(
                 // Vec3::new(0.0, jump_vel, 0.0) * time.delta_seconds()
                 Vec3::new(0.0, jump_vel, 0.0)
             } else {
-                let grav = Vec3::new(0.0, -9.81, 0.0);
+                let grav = match character_output.grounded {
+                    false => Vec3::new(0.0, -9.81, 0.0),
+                    true => Vec3::new(0.0, 0.0, 0.0),
+                };
                 let delta = time.delta_secs();
                 // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
                 v0_y + grav * delta
@@ -289,6 +287,31 @@ pub fn player_move(
     }
 }
 
+fn apply_movement(key_bindings: &Res<KeyBindings>, transform: &Transform, key: KeyCode) -> Vec3 {
+    let mut move_velocity = Vec3::ZERO;
+    let local_z = transform.local_z();
+    let local_y = transform.local_y();
+    let forward = Vec3::new(-local_z.x, 0.0, -local_z.z);
+    let right = Vec3::new(local_z.z, 0.0, -local_z.x);
+    let upward = Vec3::new(0.0, local_y.y, 0.0);
+
+    if key == key_bindings.move_forward {
+        move_velocity += forward;
+    } else if key == key_bindings.move_backward {
+        move_velocity -= forward;
+    } else if key == key_bindings.move_left {
+        move_velocity -= right;
+    } else if key == key_bindings.move_right {
+        move_velocity += right;
+    } else if key == key_bindings.move_downward {
+        move_velocity -= upward;
+    } else if key == key_bindings.move_upward {
+        move_velocity += upward;
+    }
+
+    move_velocity
+}
+
 pub fn player_look(
     settings: Res<MovementSettings>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
@@ -296,27 +319,25 @@ pub fn player_look(
     motion: Res<Events<MouseMotion>>,
     mut query: Query<&mut Transform, With<PlayerEyes>>,
 ) {
-    if let Ok(window) = primary_window.get_single() {
-        for mut transform in query.iter_mut() {
-            for ev in state.reader_motion.read(&motion) {
-                let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
-                match window.cursor_options.grab_mode {
-                    CursorGrabMode::None => (),
-                    _ => {
-                        let window_scale = window.height().min(window.width());
-                        pitch -= (settings.sensitivity * ev.delta.y * window_scale).to_radians();
-                        yaw -= (settings.sensitivity * ev.delta.x * window_scale).to_radians();
-                    }
+    let window = primary_window.single();
+
+    for mut transform in query.iter_mut() {
+        for ev in state.reader_motion.read(&motion) {
+            let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
+            match window.cursor_options.grab_mode {
+                CursorGrabMode::None => (),
+                _ => {
+                    let window_scale = window.height().min(window.width());
+                    pitch -= (settings.sensitivity * ev.delta.y * window_scale).to_radians();
+                    yaw -= (settings.sensitivity * ev.delta.x * window_scale).to_radians();
                 }
-
-                pitch = pitch.clamp(-1.54, 1.54);
-
-                transform.rotation =
-                    Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
             }
+
+            pitch = pitch.clamp(-1.54, 1.54);
+
+            transform.rotation =
+                Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
         }
-    } else {
-        warn!("Primary window not found for `player_look`");
     }
 }
 
