@@ -9,8 +9,9 @@ use bevy_rapier3d::prelude::*;
 
 use player::PlayerPlugin;
 use crate::logging::LoggingPlugin;
-use crate::player::selection::SelectionPlugin;
+use crate::player::r#mod::SelectionPlugin;
 use crate::screen::ScreenPlugin;
+use crate::selection::SelectionPlugin;
 use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
 use crate::world::WorldPlugin;
 
@@ -20,6 +21,7 @@ mod utils;
 mod world;
 mod player;
 mod logging;
+mod selection;
 
 fn main() {
     App::new()
