@@ -1,7 +1,7 @@
 use std::cmp::{max, min};
 use crate::utils::cube::Cube;
 
-#[derive(Default, PartialEq, Eq, Hash, Clone)]
+#[derive(Default, PartialEq, Eq, Hash, Clone, Debug)]
 pub struct Point3D<T: Copy> {
     pub x: T,
     pub y: T,

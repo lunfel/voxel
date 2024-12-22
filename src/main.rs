@@ -10,6 +10,7 @@ use player::PlayerPlugin;
 use crate::logging::LoggingPlugin;
 use crate::screen::ScreenPlugin;
 use crate::selection::SelectionPlugin;
+use crate::sun::SunPlugin;
 use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
 use crate::world::WorldPlugin;
 
@@ -20,6 +21,7 @@ mod world;
 mod player;
 mod logging;
 mod selection;
+mod sun;
 
 fn main() {
     App::new()
@@ -39,9 +41,10 @@ fn main() {
         )
         .add_plugins(WorldGenerationPlugin)
         .add_plugins(PlayerPlugin)
+        .add_plugins(SunPlugin)
         .add_plugins(ScreenPlugin)
         .add_systems(Startup, setup_physics)
-        .add_plugins(LogDiagnosticsPlugin::default())
+        // .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(WireframePlugin)

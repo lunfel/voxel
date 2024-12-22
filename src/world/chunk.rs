@@ -1,12 +1,15 @@
 use bevy::prelude::*;
-
+use bevy_rapier3d::na::Point2;
 use crate::{settings::CHUNK_SIZE, utils::point::Point3D};
 use crate::settings::{CHUNK_HEIGHT, CoordSystemIntegerSize};
 use crate::world::block::BlockCoord;
 
 use super::block::GameBlock;
 
-#[derive(Deref, Clone, PartialEq, Eq, Hash, Component)]
+/// ChunkCoord is the coordinate of the chunk in using the
+/// value 1 for each chunk. Multiply ChunkCoord by CHUNK_SIZE
+/// to get offset in real world
+#[derive(Deref, Clone, PartialEq, Eq, Hash, Component, Debug)]
 pub struct ChunkCoord(Point3D<CoordSystemIntegerSize>);
 
 impl From<Point3D<CoordSystemIntegerSize>> for ChunkCoord {
@@ -93,5 +96,13 @@ impl GameChunk {
                 .and_then(|blocks_z| blocks_z.get_mut(coord.z as usize))
             )
     }
+}
+
+pub fn world_transform_to_chunk_coordinates(transform: &Transform) -> Point2<CoordSystemIntegerSize>
+{
+    Point2::new(
+        (transform.translation.x / CHUNK_SIZE as f32).floor() as CoordSystemIntegerSize,
+        (transform.translation.z / CHUNK_SIZE as f32).floor() as CoordSystemIntegerSize
+    )
 }
 

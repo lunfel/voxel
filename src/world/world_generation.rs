@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::ops::{Mul, Range};
 use bevy::app::{App, Plugin, Startup};
 use bevy::asset::{Assets, AssetServer, Handle};
 use bevy::log::info;
@@ -11,7 +11,7 @@ use bevy_rapier3d::dynamics::RigidBody;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::math::Vect;
 use noise::{NoiseFn, Perlin};
-use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize};
+use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize, WORLD_DIMENSION};
 use crate::utils::fresh_entity::FreshEntity;
 use crate::utils::point::Point3D;
 use crate::world::block::{BlockCoord, GameBlockType};
@@ -20,7 +20,9 @@ use crate::world::systems::chunk::{render_indices_and_vertices, render_mesh};
 
 #[derive(Resource, Default)]
 pub struct WorldGenerationState {
-    pub finished_generating: bool
+    pub finished_generating: bool,
+    pub generated_chunk_range_x: Range<i32>,
+    pub generated_chunk_range_z: Range<i32>,
 }
 
 impl Plugin for WorldGenerationPlugin {
@@ -42,79 +44,89 @@ pub fn generate_world(
     info!("Generate world chunks");
 
     // Let's assume player is at 0,0,0 for now
-
     let player_position: Point3D<i32> = Point3D::default();
-    let dimension = 4;
 
-    for x in player_position.x - dimension..player_position.x + dimension {
-        for z in player_position.z - dimension..player_position.z + dimension {
-            let chunk_coord: ChunkCoord = (x as CoordSystemIntegerSize, 0 as CoordSystemIntegerSize, z as CoordSystemIntegerSize).into();
-
-            let chunk_transform = Transform::from_xyz(
-                (chunk_coord.x * CHUNK_SIZE) as f32,
-                (chunk_coord.y * CHUNK_HEIGHT) as f32,
-                (chunk_coord.z * CHUNK_SIZE) as f32
-            );
-
-            info!("Spawning chunks");
-
-            let chunk = generate_single_chunk(&chunk_coord);
-
-            let (indices, vertices) = render_indices_and_vertices(&chunk);
-
-            let mesh_handle = Mesh3d(mesh_manager.add(render_mesh(&indices, &vertices)));
-
-            for x in 0..CHUNK_SIZE {
-                for y in 0..CHUNK_HEIGHT{
-                    for z in 0..CHUNK_SIZE {
-                        if let Some(block) = chunk.get_block(&(x, y, z)) {
-                            if !block.is_fully_surrounded && block.block_type != GameBlockType::Empty {
-                                let block_transform = Transform::from_xyz(
-                                    (chunk_coord.x * CHUNK_SIZE + x) as f32,
-                                    (chunk_coord.y * CHUNK_HEIGHT + y) as f32,
-                                    (chunk_coord.z * CHUNK_SIZE + z) as f32
-                                );
-
-                                commands.spawn(block_transform);
-                            }
-                        }
-                    }
-                }
-            }
-
-            let v: Vec<Vect> = vertices.iter().map(|(v, _, _)| Vec3::from_array(*v)).collect();
-            let i: Vec<[u32; 3]> = match indices {
-                Indices::U16(_) => unimplemented!("Not used by the game"),
-                Indices::U32(indices) => {
-                    indices.chunks(3)
-                        .map(|chunk| {
-                            let mut vec: [u32; 3] = [0, 0, 0];
-
-                            vec[0..3].clone_from_slice(&chunk[0..3]);
-
-                            vec
-                        })
-                        .collect()
-                }
-            };
-
-            commands.spawn((
-                chunk_transform,
-                mesh_handle,
-                MeshMaterial3d(block_material.0.clone()),
-                chunk,
-                chunk_coord,
-                RigidBody::Fixed,
-                Collider::trimesh(
-                    v,
-                    i
-                ),
-                FreshEntity::default()
-            ));
+    info!("Spawning chunks START");
+    // I think there is a bug where player_position.x and player_position.z should be devided by
+    // CHUNK_SIZE. But has no effect right now because player position is 0,0
+    let generation_range_x = player_position.x - WORLD_DIMENSION..player_position.x + WORLD_DIMENSION;
+    let generation_range_z = player_position.z - WORLD_DIMENSION..player_position.z + WORLD_DIMENSION;
+    for x in generation_range_x.clone() {
+        for z in generation_range_z.clone() {
+            generate_and_spawn_chunk(&block_material, &mut mesh_manager, &mut commands, x, z);
         }
     }
 
+    world_generation_state.generated_chunk_range_x = generation_range_x;
+    world_generation_state.generated_chunk_range_z = generation_range_z;
+
+    info!("Spawning chunks END");
+
     world_generation_state.finished_generating = true;
+}
+
+pub fn generate_and_spawn_chunk(block_material: &Res<BlockMaterial>, mesh_manager: &mut Assets<Mesh>, commands: &mut Commands, x: i32, z: i32) {
+    let chunk_coord: ChunkCoord = (x as CoordSystemIntegerSize, 0 as CoordSystemIntegerSize, z as CoordSystemIntegerSize).into();
+
+    let chunk_transform = Transform::from_xyz(
+        (chunk_coord.x * CHUNK_SIZE) as f32,
+        (chunk_coord.y * CHUNK_HEIGHT) as f32,
+        (chunk_coord.z * CHUNK_SIZE) as f32
+    );
+
+    let chunk = generate_single_chunk(&chunk_coord);
+
+    let (indices, vertices) = render_indices_and_vertices(&chunk);
+
+    let mesh_handle = Mesh3d(mesh_manager.add(render_mesh(&indices, &vertices)));
+
+    for x in 0..CHUNK_SIZE {
+        for y in 0..CHUNK_HEIGHT {
+            for z in 0..CHUNK_SIZE {
+                if let Some(block) = chunk.get_block(&(x, y, z)) {
+                    if !block.is_fully_surrounded && block.block_type != GameBlockType::Empty {
+                        let block_transform = Transform::from_xyz(
+                            (chunk_coord.x * CHUNK_SIZE + x) as f32,
+                            (chunk_coord.y * CHUNK_HEIGHT + y) as f32,
+                            (chunk_coord.z * CHUNK_SIZE + z) as f32
+                        );
+
+                        commands.spawn(block_transform);
+                    }
+                }
+            }
+        }
+    }
+
+    let v: Vec<Vect> = vertices.iter().map(|(v, _, _)| Vec3::from_array(*v)).collect();
+    let i: Vec<[u32; 3]> = match indices {
+        Indices::U16(_) => unimplemented!("Not used by the game"),
+        Indices::U32(indices) => {
+            indices.chunks(3)
+                .map(|chunk| {
+                    let mut vec: [u32; 3] = [0, 0, 0];
+
+                    vec[0..3].clone_from_slice(&chunk[0..3]);
+
+                    vec
+                })
+                .collect()
+        }
+    };
+
+    commands.spawn((
+        chunk_transform,
+        mesh_handle,
+        MeshMaterial3d(block_material.0.clone()),
+        chunk,
+        chunk_coord,
+        RigidBody::Fixed,
+        Collider::trimesh(
+            v,
+            i
+        ),
+        FreshEntity::default()
+    ));
 }
 
 pub struct WorldGenerationPlugin;

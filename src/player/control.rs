@@ -114,13 +114,16 @@ pub struct PlayerState {
     pub last_velocity: Vec3
 }
 
+#[derive(Component, Default, Debug)]
+pub struct ThePlayer;
+
 pub fn setup_player(
     mut commands: Commands,
 ) {
     info!("Setup player");
 
     // Player's eyes
-    commands.spawn((FollowsPlayerPosition, PlayerEyes, Transform::from_xyz(8.0, 20.0, 8.0).looking_at(
+    commands.spawn((FollowsPlayerPosition, PlayerEyes, Transform::from_xyz(8.0, 8.0, 8.0).looking_at(
         Vec3 {
             z: CHUNK_SIZE as f32 / 2.0,
             x: CHUNK_SIZE as f32 / 2.0,
@@ -159,6 +162,7 @@ pub fn setup_player(
 
     // The player itself
     commands.spawn((
+        ThePlayer,
         PlayerControl,
         FollowsPlayerLookLeftRight,
         PlayerState::default(),
@@ -199,10 +203,6 @@ pub fn player_move(
     >,
     log_interval: Res<LogIntervalTimer>
 ) {
-    if log_interval.just_finished() {
-        info!("Debug interval timer");
-    }
-
     if let Ok(window) = primary_window.get_single() {
         for (transform, mut character_controller, character_output, mut player_state) in
             query.iter_mut()
