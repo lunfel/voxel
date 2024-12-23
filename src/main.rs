@@ -44,7 +44,7 @@ fn main() {
         .add_plugins(SunPlugin)
         .add_plugins(ScreenPlugin)
         .add_systems(Startup, setup_physics)
-        // .add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(WireframePlugin)

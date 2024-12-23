@@ -2,7 +2,7 @@ use bevy::prelude::Deref;
 use crate::settings::CoordSystemIntegerSize;
 use crate::utils::point::Point3D;
 
-#[derive(Default, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum GameBlockType {
     #[default]
     Empty,
@@ -11,7 +11,7 @@ pub enum GameBlockType {
     Gem
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct GameBlock {
     pub block_type: GameBlockType,
     pub is_fully_surrounded: bool

@@ -9,22 +9,28 @@ use super::block::GameBlock;
 /// ChunkCoord is the coordinate of the chunk in using the
 /// value 1 for each chunk. Multiply ChunkCoord by CHUNK_SIZE
 /// to get offset in real world
-#[derive(Deref, Clone, PartialEq, Eq, Hash, Component, Debug)]
-pub struct ChunkCoord(Point3D<CoordSystemIntegerSize>);
+#[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default)]
+pub struct ChunkCoord(Point2<CoordSystemIntegerSize>);
+
+impl ChunkCoord {
+    pub fn new(x: CoordSystemIntegerSize, y: CoordSystemIntegerSize) -> Self {
+        Self(Point2::new(x, y))
+    }
+}
 
 impl From<Point3D<CoordSystemIntegerSize>> for ChunkCoord {
     fn from(value: Point3D<CoordSystemIntegerSize>) -> Self {
-        Self(value)
+        Self(Point2::new(value.x as CoordSystemIntegerSize, value.z as CoordSystemIntegerSize))
     }
 }
 
 impl From<(CoordSystemIntegerSize, CoordSystemIntegerSize, CoordSystemIntegerSize)> for ChunkCoord {
     fn from(value: (CoordSystemIntegerSize, CoordSystemIntegerSize, CoordSystemIntegerSize)) -> Self {
-        Self(Point3D::from(value))
+        Self(Point2::new(value.0, value.2))
     }
 }
 
-#[derive(Deref, DerefMut)]
+#[derive(Deref, DerefMut, Debug, Clone)]
 pub struct ChunkBlocks([[[GameBlock; CHUNK_SIZE as usize]; CHUNK_HEIGHT as usize]; CHUNK_SIZE as usize]);
 
 impl Default for ChunkBlocks {
@@ -49,7 +55,7 @@ impl ChunkBlocks {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Debug, Clone)]
 pub struct GameChunk {
     pub blocks: ChunkBlocks
 }
@@ -98,11 +104,18 @@ impl GameChunk {
     }
 }
 
-pub fn world_transform_to_chunk_coordinates(transform: &Transform) -> Point2<CoordSystemIntegerSize>
+pub fn world_transform_to_chunk_coordinates(transform: &Transform) -> ChunkCoord
 {
-    Point2::new(
+    ChunkCoord(Point2::new(
         (transform.translation.x / CHUNK_SIZE as f32).floor() as CoordSystemIntegerSize,
         (transform.translation.z / CHUNK_SIZE as f32).floor() as CoordSystemIntegerSize
-    )
+    ))
 }
 
+pub fn chunk_coordinates_to_world_transform(coords: &Point2<CoordSystemIntegerSize>) -> Transform {
+    Transform::from_xyz(
+        (coords.x * CHUNK_SIZE) as f32,
+        0.0,
+        (coords.y * CHUNK_SIZE) as f32
+    )
+}

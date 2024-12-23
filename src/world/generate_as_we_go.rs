@@ -1,18 +1,26 @@
+use std::collections::HashMap;
 use crate::logging::LogIntervalTimer;
 use crate::player::control::ThePlayer;
 use crate::settings::{CoordSystemIntegerSize, CHUNK_SIZE, WORLD_DIMENSION};
-use crate::world::world_generation::{generate_and_spawn_chunk, BlockMaterial, WorldGenerationState};
+use crate::world::world_generation::{generate_chunk, spawn_chunk_from_data, BlockMaterial, ChunkData, WorldGenerationState};
 use bevy::prelude::*;
+use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
+use bevy::tasks::futures_lite::future;
 use bevy_rapier3d::na::Point2;
-use crate::world::chunk::world_transform_to_chunk_coordinates;
+use crate::world::chunk::{world_transform_to_chunk_coordinates, ChunkCoord};
+
+#[derive(Resource, Debug, Default)]
+pub struct ChunkGenerationTaskMap {
+    chunks: HashMap<ChunkCoord, Task<ChunkData>>
+}
 
 #[derive(Resource, Deref, DerefMut, Debug, Clone, Default)]
-pub struct PlayerLastChunkCoord(Point2<CoordSystemIntegerSize>);
+pub struct PlayerLastChunkCoord(ChunkCoord);
 
 #[derive(Event)]
 pub struct PlayerChangedChunkCoordEvent {
-    pub new_position: Point2<CoordSystemIntegerSize>,
-    pub previous_position: Point2<CoordSystemIntegerSize>,
+    pub new_position: ChunkCoord,
+    pub previous_position: ChunkCoord,
 }
 
 pub fn check_for_player_chunk_position_update(
@@ -23,12 +31,12 @@ pub fn check_for_player_chunk_position_update(
     mut ev_changed_coord: EventWriter<PlayerChangedChunkCoordEvent>,
 ) {
     if let Ok(transform) = player.get_single() {
-        let player_chunk_coord: Point2<CoordSystemIntegerSize> = world_transform_to_chunk_coordinates(transform);
+        let player_chunk_coord: ChunkCoord = world_transform_to_chunk_coordinates(transform);
 
         if player_chunk_coord != player_last_chunk_coord.0 {
             ev_changed_coord.send(PlayerChangedChunkCoordEvent {
                 new_position: player_chunk_coord,
-                previous_position: player_last_chunk_coord.0
+                previous_position: player_last_chunk_coord.0.clone()
             });
         }
     }
@@ -39,25 +47,36 @@ pub fn update_player_last_chunk_coord(
     mut ev_changed_coord: EventReader<PlayerChangedChunkCoordEvent>,
 ) {
     for ev in ev_changed_coord.read() {
-        info!("Player is now in chunk {}", ev.new_position);
+        info!("Player is now in chunk {}", *ev.new_position);
 
-        player_last_chunk_coord.0 = ev.new_position;
+        player_last_chunk_coord.0 = ev.new_position.clone();
     }
 }
 
-pub fn spawn_and_destroy_chunks(
+pub fn begin_generating_map_chunks(
     mut world_generation_state: ResMut<WorldGenerationState>,
-    block_material: Res<BlockMaterial>,
-    mut mesh_manager: ResMut<Assets<Mesh>>,
-    mut commands: Commands,
     mut ev_changed_coord: EventReader<PlayerChangedChunkCoordEvent>,
+    mut generation_tasks: ResMut<ChunkGenerationTaskMap>
 ) {
+    if ev_changed_coord.is_empty() {
+        return;
+    }
+
+    let task_pool = AsyncComputeTaskPool::get();
+
     for ev in ev_changed_coord.read() {
         // For X coords
         if ev.new_position.x + WORLD_DIMENSION > world_generation_state.generated_chunk_range_x.end {
             for x in world_generation_state.generated_chunk_range_x.end..ev.new_position.x + WORLD_DIMENSION {
                 for z in world_generation_state.generated_chunk_range_z.clone() {
-                    generate_and_spawn_chunk(&block_material, &mut mesh_manager, &mut commands, x, z);
+                    let chunk_coord = ChunkCoord::new(x, z);
+                    let chunk_coord_copy = chunk_coord.clone();
+
+                    let task = task_pool.spawn(async move {
+                        generate_chunk(&chunk_coord_copy)
+                    });
+
+                    generation_tasks.chunks.insert(chunk_coord, task);
                 }
             }
 
@@ -71,7 +90,14 @@ pub fn spawn_and_destroy_chunks(
         } else if ev.new_position.x - WORLD_DIMENSION < world_generation_state.generated_chunk_range_x.start {
             for x in ev.new_position.x - WORLD_DIMENSION..world_generation_state.generated_chunk_range_x.start {
                 for z in world_generation_state.generated_chunk_range_z.clone() {
-                    generate_and_spawn_chunk(&block_material, &mut mesh_manager, &mut commands, x, z);
+                    let chunk_coord = ChunkCoord::new(x, z);
+                    let chunk_coord_copy = chunk_coord.clone();
+
+                    let task = task_pool.spawn(async move {
+                        generate_chunk(&chunk_coord_copy)
+                    });
+
+                    generation_tasks.chunks.insert(chunk_coord, task);
                 }
             }
         }
@@ -80,7 +106,14 @@ pub fn spawn_and_destroy_chunks(
         if ev.new_position.y + WORLD_DIMENSION > world_generation_state.generated_chunk_range_z.end {
             for z in world_generation_state.generated_chunk_range_z.end..ev.new_position.y + WORLD_DIMENSION {
                 for x in world_generation_state.generated_chunk_range_x.clone() {
-                    generate_and_spawn_chunk(&block_material, &mut mesh_manager, &mut commands, x, z);
+                    let chunk_coord = ChunkCoord::new(x, z);
+                    let chunk_coord_copy = chunk_coord.clone();
+
+                    let task = task_pool.spawn(async move {
+                        generate_chunk(&chunk_coord_copy)
+                    });
+
+                    generation_tasks.chunks.insert(chunk_coord, task);
                 }
             }
 
@@ -94,9 +127,35 @@ pub fn spawn_and_destroy_chunks(
         } else if ev.new_position.y - WORLD_DIMENSION < world_generation_state.generated_chunk_range_z.start {
             for z in ev.new_position.y - WORLD_DIMENSION..world_generation_state.generated_chunk_range_z.start {
                 for x in world_generation_state.generated_chunk_range_x.clone() {
-                    generate_and_spawn_chunk(&block_material, &mut mesh_manager, &mut commands, x, z);
+                    let chunk_coord = ChunkCoord::new(x, z);
+                    let chunk_coord_copy = chunk_coord.clone();
+
+                    let task = task_pool.spawn(async move {
+                        generate_chunk(&chunk_coord_copy)
+                    });
+
+                    generation_tasks.chunks.insert(chunk_coord, task);
                 }
             }
         }
     }
+}
+
+pub fn receive_generated_map_chunks(
+    block_material: Res<BlockMaterial>,
+    mut mesh_manager: ResMut<Assets<Mesh>>,
+    mut commands: Commands,
+    mut generation_tasks: ResMut<ChunkGenerationTaskMap>,
+) {
+    generation_tasks.chunks.retain(|chunk_coord, task| {
+        let status = block_on(future::poll_once(task));
+
+        let retain = status.is_none();
+
+        if let Some(chunk_data) = status {
+            spawn_chunk_from_data(chunk_data, chunk_coord.clone(), &block_material, &mut mesh_manager, &mut commands);
+        }
+
+        retain
+    });
 }

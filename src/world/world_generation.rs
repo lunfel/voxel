@@ -4,18 +4,18 @@ use bevy::asset::{Assets, AssetServer, Handle};
 use bevy::log::info;
 use bevy::math::Vec3;
 use bevy::pbr::StandardMaterial;
-use bevy::prelude::{Color, Commands, Deref, DerefMut, FromWorld, Mesh, Res, ResMut, Resource, Transform, World, Mesh3d, MeshMaterial3d};
+use bevy::prelude::{Color, Commands, Deref, DerefMut, FromWorld, Mesh, Res, ResMut, Resource, Transform, World, Mesh3d, MeshMaterial3d, Component};
 use bevy::render::mesh::Indices;
 use bevy::utils::hashbrown::HashMap;
 use bevy_rapier3d::dynamics::RigidBody;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::math::Vect;
 use noise::{NoiseFn, Perlin};
-use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize, WORLD_DIMENSION};
+use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, WORLD_DIMENSION};
 use crate::utils::fresh_entity::FreshEntity;
 use crate::utils::point::Point3D;
 use crate::world::block::{BlockCoord, GameBlockType};
-use crate::world::chunk::{ChunkCoord, GameChunk};
+use crate::world::chunk::{chunk_coordinates_to_world_transform, ChunkCoord, GameChunk};
 use crate::world::systems::chunk::{render_indices_and_vertices, render_mesh};
 
 #[derive(Resource, Default)]
@@ -53,7 +53,10 @@ pub fn generate_world(
     let generation_range_z = player_position.z - WORLD_DIMENSION..player_position.z + WORLD_DIMENSION;
     for x in generation_range_x.clone() {
         for z in generation_range_z.clone() {
-            generate_and_spawn_chunk(&block_material, &mut mesh_manager, &mut commands, x, z);
+            let chunk_coord = ChunkCoord::new(x, z);
+            let chunk_data = generate_chunk(&chunk_coord);
+
+            spawn_chunk_from_data(chunk_data, chunk_coord, &block_material, &mut mesh_manager, &mut commands);
         }
     }
 
@@ -65,20 +68,46 @@ pub fn generate_world(
     world_generation_state.finished_generating = true;
 }
 
-pub fn generate_and_spawn_chunk(block_material: &Res<BlockMaterial>, mesh_manager: &mut Assets<Mesh>, commands: &mut Commands, x: i32, z: i32) {
-    let chunk_coord: ChunkCoord = (x as CoordSystemIntegerSize, 0 as CoordSystemIntegerSize, z as CoordSystemIntegerSize).into();
+pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, block_material: &Res<BlockMaterial>, mesh_manager: &mut Assets<Mesh>, commands: &mut Commands) {
+    for t in chunk_data.block_transforms.into_iter() {
+        commands.spawn(t);
+    }
 
-    let chunk_transform = Transform::from_xyz(
-        (chunk_coord.x * CHUNK_SIZE) as f32,
-        (chunk_coord.y * CHUNK_HEIGHT) as f32,
-        (chunk_coord.z * CHUNK_SIZE) as f32
-    );
+    commands.spawn((
+        chunk_coordinates_to_world_transform(&chunk_coord),
+        Mesh3d(mesh_manager.add(chunk_data.mesh)),
+        MeshMaterial3d(block_material.0.clone()),
+        chunk_data.chunk,
+        chunk_coord,
+        RigidBody::Fixed,
+        Collider::trimesh(
+            chunk_data.vertex,
+            chunk_data.indices
+        ),
+        FreshEntity::default()
+    ));
+}
 
-    let chunk = generate_single_chunk(&chunk_coord);
+#[derive(Debug, Clone)]
+pub struct ChunkData {
+    block_transforms: Vec<Transform>,
+    mesh: Mesh,
+    vertex: Vec<Vect>,
+    indices: Vec<[u32; 3]>,
+    chunk: GameChunk
+}
+
+pub fn generate_chunk(chunk_coord: &ChunkCoord) -> ChunkData {
+    let chunk_transform = chunk_coordinates_to_world_transform(chunk_coord);
+
+    let chunk = generate_single_chunk(chunk_coord);
 
     let (indices, vertices) = render_indices_and_vertices(&chunk);
 
-    let mesh_handle = Mesh3d(mesh_manager.add(render_mesh(&indices, &vertices)));
+    // let mesh = Mesh3d(mesh_manager.add(render_mesh(&indices, &vertices)));
+    let mesh = render_mesh(&indices, &vertices);
+
+    let mut block_transforms = vec![];
 
     for x in 0..CHUNK_SIZE {
         for y in 0..CHUNK_HEIGHT {
@@ -87,11 +116,12 @@ pub fn generate_and_spawn_chunk(block_material: &Res<BlockMaterial>, mesh_manage
                     if !block.is_fully_surrounded && block.block_type != GameBlockType::Empty {
                         let block_transform = Transform::from_xyz(
                             (chunk_coord.x * CHUNK_SIZE + x) as f32,
-                            (chunk_coord.y * CHUNK_HEIGHT + y) as f32,
-                            (chunk_coord.z * CHUNK_SIZE + z) as f32
+                            (CHUNK_HEIGHT + y) as f32,
+                            (chunk_coord.y * CHUNK_SIZE + z) as f32
                         );
 
-                        commands.spawn(block_transform);
+                        block_transforms.push(block_transform);
+                        //commands.spawn(block_transform);
                     }
                 }
             }
@@ -114,19 +144,14 @@ pub fn generate_and_spawn_chunk(block_material: &Res<BlockMaterial>, mesh_manage
         }
     };
 
-    commands.spawn((
-        chunk_transform,
-        mesh_handle,
-        MeshMaterial3d(block_material.0.clone()),
-        chunk,
-        chunk_coord,
-        RigidBody::Fixed,
-        Collider::trimesh(
-            v,
-            i
-        ),
-        FreshEntity::default()
-    ));
+
+    ChunkData {
+        block_transforms,
+        mesh,
+        vertex: v,
+        indices: i,
+        chunk
+    }
 }
 
 pub struct WorldGenerationPlugin;
@@ -170,7 +195,7 @@ where P: Into<ChunkCoord> + Clone
             for z in 0..(CHUNK_SIZE as usize) {
                 let perlin_coord = PerlinCoord([
                     (x as f64  + 0.1) + (coord.x as f64 * CHUNK_SIZE as f64),
-                    (z as f64  + 0.1) + (coord.z as f64 * CHUNK_SIZE as f64)
+                    (z as f64  + 0.1) + (coord.y as f64 * CHUNK_SIZE as f64)
                 ]);
 
                 // perlin.get gives an f64 value between -1 and 1

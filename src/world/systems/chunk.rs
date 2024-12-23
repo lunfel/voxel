@@ -1,60 +1,12 @@
+use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE};
+use crate::world::block::{BlockCoord, GameBlockType};
+use crate::world::chunk::{GameChunk, VertexBuffer, UV};
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
-use bevy_rapier3d::prelude::*;
-use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, CoordSystemIntegerSize};
-use crate::player::control::PlayerControl;
-use crate::utils::cube::Cube;
-use crate::world::block::{BlockCoord, GameBlockType};
-use crate::world::chunk::{ChunkCoord, GameChunk, UV, VertexBuffer};
-use crate::world::world_generation::{BlockMaterial, BlockMaterialMap};
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct DebugColliderTimer(pub Timer);
-
-pub fn load_chunks_dynamically(
-    mut query: Query<(Entity, &GameChunk, &ChunkCoord)>,
-    mut commands: Commands
-) {
-    let select_box: Cube<CoordSystemIntegerSize> = Cube::from_points(
-        (-1, -1, -1).into(),
-        (1, 1, 1).into()
-    );
-
-    for (entity, chunk, coord) in query.iter() {
-        if coord.is_inside_of_cube(&select_box) {
-            // Is inside
-        } else {
-            // Not inside
-        }
-    }
-}
-
-pub fn render_dirty_chunk(
-    mut query: Query<(Entity, &mut GameChunk, &ChunkCoord, &mut Collider, &Mesh3d)>,
-    mut player_query: Query<(Entity, &PlayerControl, &Transform)>,
-    mut mesh_manager: ResMut<Assets<Mesh>>,
-    block_material_mapping: Res<BlockMaterialMap>,
-    block_material: Res<BlockMaterial>,
-    mut commands: Commands
-) {
-    for (entity, chunk, coord, collider, mesh_handle) in query.iter() {
-        // Remove dirty components
-        let mut entity_commands = commands.entity(entity);
-
-        entity_commands.remove::<Collider>();
-        entity_commands.remove::<Mesh3d>();
-        mesh_manager.remove(mesh_handle);
-
-        let (indices, vertices) = render_indices_and_vertices(chunk);
-
-        let mesh = render_mesh(&indices, &vertices);
-
-        let mesh_handle = Mesh3d(mesh_manager.add(mesh));
-
-        entity_commands.insert(mesh_handle);
-    }
-}
 
 pub fn render_indices_and_vertices(chunk: &GameChunk) -> (Indices, VertexBuffer) {
     let mut indices: Vec<u32> = vec![];
