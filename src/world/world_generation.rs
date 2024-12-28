@@ -1,10 +1,10 @@
 use std::ops::{Mul, Range};
 use bevy::app::{App, Plugin, Startup};
-use bevy::asset::{Assets, AssetServer, Handle};
+use bevy::asset::{AssetServer, Assets, Handle};
 use bevy::log::info;
 use bevy::math::Vec3;
 use bevy::pbr::StandardMaterial;
-use bevy::prelude::{Color, Commands, Deref, DerefMut, FromWorld, Mesh, Res, ResMut, Resource, Transform, World, Mesh3d, MeshMaterial3d, Component};
+use bevy::prelude::{Color, Commands, Component, Deref, DerefMut, FromWorld, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, Resource, Transform, World};
 use bevy::render::mesh::Indices;
 use bevy::utils::hashbrown::HashMap;
 use bevy_rapier3d::dynamics::RigidBody;
@@ -12,12 +12,9 @@ use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::math::Vect;
 use noise::{NoiseFn, Perlin};
 use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, WORLD_DIMENSION};
-use crate::utils::fresh_entity::FreshEntity;
 use crate::utils::point::Point3D;
 use crate::world::block::{BlockCoord, GameBlockType};
-use crate::world::chunk::{chunk_coordinates_to_world_transform, ChunkCoord, GameChunk};
-use crate::world::systems::chunk::{render_indices_and_vertices, render_mesh};
-
+use crate::world::chunk::{chunk_coordinates_to_world_transform, render_indices_and_vertices, render_mesh, ChunkCoord, GameChunk};
 #[derive(Resource, Default)]
 pub struct WorldGenerationState {
     pub finished_generating: bool,
@@ -83,8 +80,7 @@ pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, blo
         Collider::trimesh(
             chunk_data.vertex,
             chunk_data.indices
-        ),
-        FreshEntity::default()
+        )
     ));
 }
 
