@@ -43,9 +43,8 @@ fn main() {
         .add_plugins(PlayerPlugin)
         .add_plugins(SunPlugin)
         .add_plugins(ScreenPlugin)
-        .add_systems(Startup, setup_physics)
-        .add_plugins(LogDiagnosticsPlugin::default())
-        .add_plugins(FrameTimeDiagnosticsPlugin)
+        // .add_plugins(LogDiagnosticsPlugin::default())
+        // .add_plugins(FrameTimeDiagnosticsPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(WireframePlugin)
         .add_plugins(SelectionPlugin)
@@ -55,13 +54,4 @@ fn main() {
         .init_resource::<BlockMaterialMap>()
         .init_resource::<BlockMaterial>()
         .run();
-}
-
-fn setup_physics(mut commands: Commands) {
-    /* Create the bouncing ball. */
-    commands
-        .spawn(RigidBody::Dynamic)
-        .insert(Collider::ball(0.5))
-        .insert(Restitution::coefficient(0.1))
-        .insert(Transform::from_xyz(16.0, 20.0, 16.0));
 }

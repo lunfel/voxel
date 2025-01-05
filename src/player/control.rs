@@ -51,7 +51,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.00012,
-            speed: 7.0, // Used to be 5
+            speed: 25.0, // Used to be 5
         }
     }
 }
@@ -236,13 +236,14 @@ pub fn player_move(
                     _ => {
                         let key = *key;
 
-                        if player_state.grounded_state == PlayerGroundedEnum::Grounded {
-                            move_velocity += apply_movement(&key_bindings, transform, key);
-                        } else {
-                            let air_locked_velocity = player_state.last_velocity * Vec3::new(1.0, 0.0, 1.0); // Continuer d'appliquer le mouvement x & z dans les airs
-
-                            move_velocity += air_locked_velocity;
-                        }
+                        move_velocity += apply_movement(&key_bindings, transform, key);
+                        // if player_state.grounded_state == PlayerGroundedEnum::Grounded {
+                        //     move_velocity += apply_movement(&key_bindings, transform, key);
+                        // } else {
+                        //     let air_locked_velocity = player_state.last_velocity * Vec3::new(1.0, 0.0, 1.0); // Continuer d'appliquer le mouvement x & z dans les airs
+                        //
+                        //     move_velocity += air_locked_velocity;
+                        // }
                     }
                 }
             }
@@ -277,7 +278,7 @@ pub fn player_move(
                 };
                 let delta = time.delta_secs();
                 // info!("Y vel: {} + {} * {}", v0_y, grav, delta);
-                v0_y + grav * delta
+                (v0_y + grav) * delta
             };
 
             player_state.last_velocity = final_vel;

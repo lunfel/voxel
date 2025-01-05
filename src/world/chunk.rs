@@ -11,7 +11,7 @@ use super::block::GameBlock;
 /// ChunkCoord is the coordinate of the chunk in using the
 /// value 1 for each chunk. Multiply ChunkCoord by CHUNK_SIZE
 /// to get offset in real world
-#[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default)]
+#[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default, Copy)]
 pub struct ChunkCoord(Point2<CoordSystemIntegerSize>);
 
 impl ChunkCoord {

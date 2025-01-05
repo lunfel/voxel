@@ -15,6 +15,8 @@ use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, WORLD_DIMENSION};
 use crate::utils::point::Point3D;
 use crate::world::block::{BlockCoord, GameBlockType};
 use crate::world::chunk::{chunk_coordinates_to_world_transform, render_indices_and_vertices, render_mesh, ChunkCoord, GameChunk};
+use crate::world::game_world::{ChunkKeepAlive, PendingAdditionToGameWorld};
+
 #[derive(Resource, Default)]
 pub struct WorldGenerationState {
     pub finished_generating: bool,
@@ -80,7 +82,9 @@ pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, blo
         Collider::trimesh(
             chunk_data.vertex,
             chunk_data.indices
-        )
+        ),
+        PendingAdditionToGameWorld,
+        ChunkKeepAlive::default()
     ));
 }
 
