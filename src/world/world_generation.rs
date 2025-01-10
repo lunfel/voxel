@@ -159,9 +159,24 @@ impl Mul<f64> for PerlinCoord {
     type Output = [f64; 2];
 
     fn mul(self, rhs: f64) -> Self::Output {
-        return [
-            &self[0] * rhs,
-            &self[1] * rhs
+        [
+            self[0] * rhs,
+            self[1] * rhs
+        ]
+    }
+}
+
+#[derive(Deref, DerefMut, Clone, Copy)]
+pub struct PerlinCoord3d([f64; 3]);
+
+impl Mul<f64> for PerlinCoord3d {
+    type Output = [f64; 3];
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        [
+            self[0] * rhs,
+            self[1] * rhs,
+            self[2] * rhs,
         ]
     }
 }
@@ -172,6 +187,8 @@ where P: Into<ChunkCoord> + Clone
     let continentality_perlin = Perlin::new(10);
     let continentality_frequency = 1.0 / 180.0;
     let continentality_amplitude = 1.0;
+
+    let block_perlin = Perlin::new(20);
 
     let height_perlin = Perlin::new(1);
     let frequency1 = 1.0 / 40.0;
@@ -194,23 +211,45 @@ where P: Into<ChunkCoord> + Clone
                     (z as f64  + 0.1) + (coord.y as f64 * CHUNK_SIZE as f64)
                 ]);
 
+                let perlin_coord3d = PerlinCoord3d([
+                    (x as f64  + 0.1) + (coord.x as f64 * CHUNK_SIZE as f64),
+                    (y as f64  + 0.1) * 5.0,
+                    (z as f64  + 0.1) + (coord.y as f64 * CHUNK_SIZE as f64)
+                ]);
+
                 // perlin.get gives an f64 value between -1 and 1
                 let continentality_value = ((continentality_perlin.get(perlin_coord * continentality_frequency) + 1.0) / 2.0) * continentality_amplitude;
                 let height_value = ((height_perlin.get(perlin_coord * frequency1) + 1.0) / 2.0) * (amplitude1 * (continentality_value + 0.1));
                 let height_value2 = ((height_perlin2.get(perlin_coord * frequency2) + 1.0) / 2.0) * amplitude2 * (continentality_value + 0.1);
                 let height = (height_value + height_value2) as usize;
 
-                if height == y {
-                    game_chunk.blocks[x][y][z].block_type = if ground_layer_perlin.get(perlin_coord.0) > 0.5 {
-                        GameBlockType::Rock
-                    } else if ground_layer_perlin.get(perlin_coord.0) > 0.4 {
-                        GameBlockType::Gem
-                    } else {
-                        GameBlockType::Ground
+                let block_value = (block_perlin.get(perlin_coord3d * (1.0 / 40.0)) + 1.0) / 2.0;
+
+                // info!("perlin value {}", block_value);
+
+                if height >= y {
+                    game_chunk.blocks[x][y][z].block_type = match block_value {
+                        0.40..0.41 => GameBlockType::Gem,
+                        0.41..0.60 => GameBlockType::Rock,
+                        0.60..0.68 => GameBlockType::Empty,
+                        0.68..0.70 => GameBlockType::Dirt,
+                        0.70..1.0 => GameBlockType::Grass,
+                        _ => GameBlockType::Dirt,
                     }
-                } else if height > y {
-                    game_chunk.blocks[x][y][z].block_type = GameBlockType::Rock
                 }
+
+
+                // if height == y {
+                //     game_chunk.blocks[x][y][z].block_type = if ground_layer_perlin.get(perlin_coord.0) > 0.5 {
+                //         GameBlockType::Rock
+                //     } else if ground_layer_perlin.get(perlin_coord.0) > 0.4 {
+                //         GameBlockType::Gem
+                //     } else {
+                //         GameBlockType::Ground
+                //     }
+                // } else if height > y {
+                //     game_chunk.blocks[x][y][z].block_type = GameBlockType::Rock
+                // }
             }
         }
     }
@@ -273,7 +312,7 @@ impl FromWorld for BlockMaterialMap {
         let mut material_map: BlockMaterialHashMap = HashMap::new();
 
         material_map.insert(GameBlockType::Rock, materials.add(Color::srgba(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0, 1.0)));
-        material_map.insert(GameBlockType::Ground, materials.add(Color::srgba(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0, 1.0)));
+        material_map.insert(GameBlockType::Grass, materials.add(Color::srgba(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0, 1.0)));
 
         Self(material_map)
     }

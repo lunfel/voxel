@@ -45,7 +45,12 @@ pub fn check_for_player_chunk_position_update(
 pub fn update_player_last_chunk_coord(
     mut player_last_chunk_coord: ResMut<PlayerLastChunkCoord>,
     mut ev_changed_coord: EventReader<PlayerChangedChunkCoordEvent>,
+    settings: Res<Settings>,
 ) {
+    if !settings.logs.change_chunk_enabled {
+        return;
+    }
+
     for ev in ev_changed_coord.read() {
         info!("Player is now in chunk {}", *ev.new_position);
 
@@ -84,7 +89,9 @@ pub fn begin_generating_map_chunks(
         }
     }
 
-    info!("Generated {} chunks", total);
+    if settings.logs.update_as_we_move_enabled {
+        info!("Generated {} chunks", total);
+    }
 }
 
 pub fn receive_generated_map_chunks(
@@ -121,7 +128,7 @@ pub fn touch_chunks_around_player_at_interval(
         }
     }
 
-    if total > 0 {
+    if total > 0 && settings.logs.update_as_we_move_enabled {
         info!("Touch chunks {} times", total);
     }
 }
@@ -133,7 +140,8 @@ pub fn remove_chunks_that_are_stale(
     query: Query<(Entity, &ChunkCoord, &ChunkKeepAlive)>,
     time: Res<Time>,
     mut commands: Commands,
-    mut game_world: ResMut<GameWorld>
+    mut game_world: ResMut<GameWorld>,
+    settings: Res<Settings>
 ) {
     let mut total = 0;
 
@@ -147,15 +155,20 @@ pub fn remove_chunks_that_are_stale(
         }
     }
 
-    if total > 0 {
+    if total > 0 && settings.logs.update_as_we_move_enabled {
         info!("Removed {} stale chunks", total);
     }
 }
 
 pub fn count_number_of_triangles_in_chunk_meshes(
     query: Query<&Mesh3d, With<ChunkCoord>>,
-    meshes: Res<Assets<Mesh>>
+    meshes: Res<Assets<Mesh>>,
+    settings: Res<Settings>
 ) {
+    if !settings.logs.triangle_count_enabled {
+        return;
+    }
+
     let mut total = 0;
 
     for mesh in query.iter() {

@@ -1,17 +1,30 @@
+use crate::world::block::CoordSystemIntegerSize;
+use bevy::prelude::*;
 use serde_derive::Deserialize;
+use std::default::Default;
 use std::fs;
 use std::process::exit;
 use toml;
-use crate::world::block::CoordSystemIntegerSize;
-use bevy::prelude::*;
-use std::default::Default;
 
 pub const CHUNK_SIZE: CoordSystemIntegerSize = 16;
 pub const CHUNK_HEIGHT: CoordSystemIntegerSize = 100;
 
 #[derive(Debug, Deserialize, Resource)]
 pub struct Settings {
-   pub world: World
+   pub world: World,
+   pub logs: Logs
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct World {
+   pub world_dimension: i32
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct Logs {
+   pub triangle_count_enabled: bool,
+   pub change_chunk_enabled: bool,
+   pub update_as_we_move_enabled: bool
 }
 
 impl Default for Settings {
@@ -49,9 +62,4 @@ impl Default for Settings {
          }
       }
    }
-}
-
-#[derive(Debug, Deserialize, Default)]
-pub struct World {
-   pub world_dimension: i32
 }
