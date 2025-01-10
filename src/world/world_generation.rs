@@ -11,17 +11,15 @@ use bevy_rapier3d::dynamics::RigidBody;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::math::Vect;
 use noise::{NoiseFn, Perlin};
-use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, WORLD_DIMENSION};
+use crate::settings::{Settings, CHUNK_HEIGHT, CHUNK_SIZE};
 use crate::utils::point::Point3D;
-use crate::world::block::{BlockCoord, GameBlockType};
+use crate::world::block::{BlockCoord, CoordSystemIntegerSize, GameBlockType};
 use crate::world::chunk::{chunk_coordinates_to_world_transform, render_indices_and_vertices, render_mesh, ChunkCoord, GameChunk};
 use crate::world::game_world::{ChunkKeepAlive, PendingAdditionToGameWorld};
 
 #[derive(Resource, Default)]
 pub struct WorldGenerationState {
-    pub finished_generating: bool,
-    pub generated_chunk_range_x: Range<i32>,
-    pub generated_chunk_range_z: Range<i32>,
+    pub finished_generating: bool
 }
 
 impl Plugin for WorldGenerationPlugin {
@@ -38,7 +36,8 @@ pub fn generate_world(
     mut world_generation_state: ResMut<WorldGenerationState>,
     block_material: Res<BlockMaterial>,
     mut mesh_manager: ResMut<Assets<Mesh>>,
-    mut commands: Commands
+    mut commands: Commands,
+    settings: Res<Settings>
 ) {
     info!("Generate world chunks");
 
@@ -48,8 +47,8 @@ pub fn generate_world(
     info!("Spawning chunks START");
     // I think there is a bug where player_position.x and player_position.z should be devided by
     // CHUNK_SIZE. But has no effect right now because player position is 0,0
-    let generation_range_x = player_position.x - WORLD_DIMENSION..player_position.x + WORLD_DIMENSION;
-    let generation_range_z = player_position.z - WORLD_DIMENSION..player_position.z + WORLD_DIMENSION;
+    let generation_range_x = player_position.x - settings.world.world_dimension..player_position.x + settings.world.world_dimension;
+    let generation_range_z = player_position.z - settings.world.world_dimension..player_position.z + settings.world.world_dimension;
     for x in generation_range_x.clone() {
         for z in generation_range_z.clone() {
             let chunk_coord = ChunkCoord::new(x, z);
@@ -59,18 +58,15 @@ pub fn generate_world(
         }
     }
 
-    world_generation_state.generated_chunk_range_x = generation_range_x;
-    world_generation_state.generated_chunk_range_z = generation_range_z;
-
     info!("Spawning chunks END");
 
     world_generation_state.finished_generating = true;
 }
 
 pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, block_material: &Res<BlockMaterial>, mesh_manager: &mut Assets<Mesh>, commands: &mut Commands) {
-    for t in chunk_data.block_transforms.into_iter() {
-        commands.spawn(t);
-    }
+    // for t in chunk_data.block_transforms.into_iter() {
+    //     commands.spawn(t);
+    // }
 
     commands.spawn((
         chunk_coordinates_to_world_transform(&chunk_coord),

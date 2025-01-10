@@ -1,6 +1,7 @@
 use bevy::prelude::Deref;
-use crate::settings::CoordSystemIntegerSize;
 use crate::utils::point::Point3D;
+
+pub type CoordSystemIntegerSize = i32;
 
 #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum GameBlockType {

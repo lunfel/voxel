@@ -1,0 +1,3 @@
+[world]
+# Number of chunks in each direction from the player
+world_dimension = 12

@@ -3,8 +3,8 @@ use bevy_rapier3d::na::Point2;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use bevy::asset::RenderAssetUsages;
 use crate::{settings::CHUNK_SIZE, utils::point::Point3D};
-use crate::settings::{CoordSystemIntegerSize, CHUNK_HEIGHT};
-use crate::world::block::{BlockCoord, GameBlockType};
+use crate::settings::CHUNK_HEIGHT;
+use crate::world::block::{BlockCoord, CoordSystemIntegerSize, GameBlockType};
 
 use super::block::GameBlock;
 

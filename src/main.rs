@@ -10,6 +10,7 @@ use player::PlayerPlugin;
 use crate::logging::LoggingPlugin;
 use crate::screen::ScreenPlugin;
 use crate::selection::SelectionPlugin;
+use crate::settings::Settings;
 use crate::sun::SunPlugin;
 use crate::world::world_generation::{BlockMaterial, BlockMaterialMap, WorldGenerationPlugin};
 use crate::world::WorldPlugin;
@@ -25,6 +26,7 @@ mod sun;
 
 fn main() {
     App::new()
+        .init_resource::<Settings>()
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         // This slows down the game by a lot
         // .add_plugins(RapierDebugRenderPlugin::default())
@@ -43,8 +45,8 @@ fn main() {
         .add_plugins(PlayerPlugin)
         .add_plugins(SunPlugin)
         .add_plugins(ScreenPlugin)
-        // .add_plugins(LogDiagnosticsPlugin::default())
-        // .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(WireframePlugin)
         .add_plugins(SelectionPlugin)
