@@ -17,7 +17,8 @@ pub struct Settings {
 
 #[derive(Debug, Deserialize, Default)]
 pub struct World {
-   pub world_dimension: i32
+   pub world_dimension: i32,
+   pub preload_extra_distance: i32
 }
 
 #[derive(Debug, Deserialize, Default)]

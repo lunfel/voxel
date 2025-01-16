@@ -1,10 +1,10 @@
 use std::ops::{Add, Div, Mul, Range, Sub};
 use bevy::app::{App, Plugin, Startup};
 use bevy::asset::{AssetServer, Assets, Handle};
-use bevy::log::info;
+use bevy::log::{info, info_span};
 use bevy::math::Vec3;
 use bevy::pbr::StandardMaterial;
-use bevy::prelude::{Color, Commands, Component, Deref, DerefMut, FromWorld, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, Resource, Transform, World};
+use bevy::prelude::{Color, Commands, Component, Deref, DerefMut, FromWorld, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, Resource, Transform, Visibility, World};
 use bevy::render::mesh::Indices;
 use bevy::utils::hashbrown::HashMap;
 use bevy_rapier3d::dynamics::RigidBody;
@@ -80,7 +80,8 @@ pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, blo
             chunk_data.indices
         ),
         PendingAdditionToGameWorld,
-        ChunkKeepAlive::default()
+        ChunkKeepAlive::default(),
+        Visibility::Hidden
     ));
 }
 
@@ -217,6 +218,8 @@ impl Mul<f64> for PerlinCoord3d {
 pub fn generate_single_chunk<P>(coord: &P) -> GameChunk
 where P: Into<ChunkCoord> + Clone
 {
+    let _span = info_span!("generate_single_chunk").entered();
+
     let continentality_perlin = Perlin::new(10);
     let continentality_frequency = 1.0 / 180.0;
     let continentality_amplitude = 1.0;

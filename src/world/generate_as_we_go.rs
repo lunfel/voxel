@@ -73,8 +73,8 @@ pub fn begin_generating_map_chunks(
     let task_pool = AsyncComputeTaskPool::get();
 
     for ev in ev_changed_coord.read() {
-        for x in (ev.new_position.x - settings.world.world_dimension)..(ev.new_position.x + settings.world.world_dimension) {
-            for y in (ev.new_position.y - settings.world.world_dimension)..(ev.new_position.y + settings.world.world_dimension) {
+        for x in (ev.new_position.x - settings.world.world_dimension - settings.world.preload_extra_distance)..(ev.new_position.x + settings.world.world_dimension + settings.world.preload_extra_distance) {
+            for y in (ev.new_position.y - settings.world.world_dimension - settings.world.preload_extra_distance)..(ev.new_position.y + settings.world.world_dimension + settings.world.preload_extra_distance) {
                 let chunk_coord = ChunkCoord::new(x, y);
 
                 if game_world.get(&chunk_coord).is_none() {
@@ -114,17 +114,21 @@ pub fn receive_generated_map_chunks(
 }
 
 pub fn touch_chunks_around_player_at_interval(
-    mut query: Query<(&ChunkCoord, &mut ChunkKeepAlive)>,
+    mut query: Query<(&ChunkCoord, &mut ChunkKeepAlive, &mut Visibility)>,
     player_last_chunk_coord: Res<PlayerLastChunkCoord>,
     time: Res<Time>,
     settings: Res<Settings>
 ) {
     let mut total = 0;
-    for (coord, mut keepalive) in query.iter_mut() {
-        if (coord.x - player_last_chunk_coord.x).abs() < (settings.world.world_dimension + 2) && (coord.y - player_last_chunk_coord.y).abs() < (settings.world.world_dimension + 2) {
+    for (coord, mut keepalive, mut visibility) in query.iter_mut() {
+        if (coord.x - player_last_chunk_coord.x).abs() < (settings.world.world_dimension + settings.world.preload_extra_distance) && (coord.y - player_last_chunk_coord.y).abs() < (settings.world.world_dimension + settings.world.preload_extra_distance) {
             keepalive.last_touch = time.elapsed_secs();
 
             total += 1;
+
+            if (coord.x - player_last_chunk_coord.x).abs() < settings.world.world_dimension && (coord.y - player_last_chunk_coord.y).abs() < settings.world.world_dimension {
+                *visibility = Visibility::Visible;
+            }
         }
     }
 
@@ -137,7 +141,7 @@ pub fn touch_chunks_around_player_at_interval(
 pub struct RemoveChunkTasks(HashMap<ChunkCoord, Task<Entity>>);
 
 pub fn remove_chunks_that_are_stale(
-    query: Query<(Entity, &ChunkCoord, &ChunkKeepAlive)>,
+    mut query: Query<(Entity, &ChunkCoord, &ChunkKeepAlive, &mut Visibility)>,
     time: Res<Time>,
     mut commands: Commands,
     mut game_world: ResMut<GameWorld>,
@@ -145,13 +149,17 @@ pub fn remove_chunks_that_are_stale(
 ) {
     let mut total = 0;
 
-    for (entity, chunk_coord, keepalive) in query.iter() {
-        if (time.elapsed_secs() - keepalive.last_touch).abs() > 10.0 {
-            game_world.remove(chunk_coord);
+    for (entity, chunk_coord, keepalive, mut visibility) in query.iter_mut() {
+        if (time.elapsed_secs() - keepalive.last_touch).abs() > 3.0 {
+            *visibility = Visibility::Hidden;
+            
+            if (time.elapsed_secs() - keepalive.last_touch).abs() > 6.0 {
+                game_world.remove(chunk_coord);
 
-            commands.entity(entity).despawn();
+                commands.entity(entity).despawn();
 
-            total += 1;
+                total += 1;
+            }
         }
     }
 
