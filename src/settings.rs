@@ -7,7 +7,7 @@ use std::process::exit;
 use toml;
 
 pub const CHUNK_SIZE: CoordSystemIntegerSize = 16;
-pub const CHUNK_HEIGHT: CoordSystemIntegerSize = 100;
+pub const CHUNK_HEIGHT: CoordSystemIntegerSize = 160;
 
 #[derive(Debug, Deserialize, Resource)]
 pub struct Settings {
