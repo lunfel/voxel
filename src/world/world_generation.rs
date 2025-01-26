@@ -271,7 +271,7 @@ where P: Into<ChunkCoord> + Clone
                 // New version of height map
                 let mut height = 0;
                 for octave in 1..3 {
-                    let frequency = height_lacunarity.powf(octave as f64) * height_base_frequency as f64;
+                    let frequency = height_lacunarity.powf(octave as f64) * height_base_frequency;
                     let amplitude = height_persistence.powf(octave as f64) * height_base_amplitude;
                     let octave_height = (((height_perlin_new.get(perlin_coord * frequency) + 1.0) / 2.0) * amplitude) as usize;
 
