@@ -2,7 +2,7 @@ mod coord;
 
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use crate::game_world::coord::ChunkCoord;
+use crate::game_world::coord::{ChunkCoord};
 
 /// Holds the currently loaded chunks of the game world
 pub struct GameWorldPlugin;
@@ -41,7 +41,7 @@ fn tmp_setup(
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
-/// Entity is meant for GameChunk in this resource
+/// Entity is meant for VoxelChunk in this resource
 pub struct GameWorld(pub HashMap<ChunkCoord, Entity>);
 
 #[derive(Component)]

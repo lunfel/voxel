@@ -1,5 +1,7 @@
 mod player;
 mod game_world;
+mod chunk;
+mod settings;
 
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
 use bevy::prelude::*;
