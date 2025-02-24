@@ -1,34 +1,62 @@
-pub mod control;
+mod control;
+mod cursor;
 
 use bevy::prelude::*;
-
-use crate::{
-    player::control::{
-        cursor_grab, follow_player_look_left_right, initial_grab_cursor, player_look, player_move,
-        setup_player, InputState, JumpTimer, KeyBindings, MovementSettings,
-    }
-};
-use crate::player::control::{follow_player_look_up_down, follow_player_position};
-use crate::world::world_generation::generate_world;
+use bevy_rapier3d::control::{CharacterAutostep, CharacterLength, KinematicCharacterController, KinematicCharacterControllerOutput};
+use bevy_rapier3d::dynamics::{CoefficientCombineRule, RigidBody};
+use bevy_rapier3d::geometry::{Collider, Friction};
+use crate::player::control::{player_look, player_move, InputState, KeyBindings, MovementSettings};
+use crate::player::cursor::{cursor_grab, initial_grab_cursor, initial_grab_cursor_delayed, DelayedSystemTimer};
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        info!("PlayerPlugin initializing");
-        app.init_resource::<InputState>()
+        app.add_systems(Startup, setup)
+            // cursor
             .init_resource::<MovementSettings>()
             .init_resource::<KeyBindings>()
-            .init_resource::<JumpTimer>()
-            .add_systems(Startup, setup_player.after(generate_world))
-            .add_systems(Startup, initial_grab_cursor.after(generate_world))
-            .add_systems(Update, player_move)
-            .add_systems(Update, player_look)
-            .add_systems(Update, follow_player_look_left_right)
-            .add_systems(Update, follow_player_look_up_down)
-            .add_systems(Update, follow_player_position)
-            .add_systems(Update, cursor_grab);
-
-        info!("PlayerPlugin loaded");
+            .init_resource::<DelayedSystemTimer>()
+            .add_systems(Startup, (
+                initial_grab_cursor
+            ))
+            .add_systems(Update, (
+                initial_grab_cursor_delayed,
+                cursor_grab
+            ))
+            // control
+            .init_resource::<InputState>()
+            .add_systems(Update, (
+                player_move,
+                player_look
+            ));
     }
+}
+
+#[derive(Component, Default, Debug)]
+pub struct ThePlayer;
+
+pub fn setup(
+    mut commands: Commands,
+) {
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ThePlayer,
+        Friction {
+            coefficient: 0.0,
+            combine_rule: CoefficientCombineRule::Min,
+        },
+        RigidBody::KinematicPositionBased,
+        Collider::cylinder(0.825, 0.45),
+        KinematicCharacterController {
+            snap_to_ground: None,
+            autostep: Some(CharacterAutostep {
+                max_height: CharacterLength::Absolute(0.1),
+                ..default()
+            }),
+            ..default()
+        },
+        KinematicCharacterControllerOutput::default(),
+    ));
 }
