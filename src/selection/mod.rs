@@ -2,7 +2,6 @@ use bevy::asset::RenderAssetUsages;
 use crate::player::control::{FollowsPlayerLookLeftRight, FollowsPlayerLookUpDown, FollowsPlayerPosition, PlayerControl, PlayerEyes};
 use crate::settings::CHUNK_SIZE;
 use bevy::math::Vec3;
-use bevy::pbr::wireframe::{Wireframe, WireframeColor};
 use bevy::prelude::*;
 use bevy::render::mesh::PrimitiveTopology;
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
@@ -127,7 +126,7 @@ impl Material for OutlineMaterial {
 
 pub fn select_block(
     rapier_context: RapierContextAccess,
-    mut commands: Commands,
+    commands: Commands,
     query: Query<&Transform, With<PlayerEyes>>,
     mut selection_block_query: Query<(&mut Transform, &mut Visibility), (With<WireframeCube>, Without<PlayerEyes>)>,
     exclusion_query: Query<Entity, With<PlayerControl>>) {

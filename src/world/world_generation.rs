@@ -1,10 +1,10 @@
-use std::ops::{Add, Div, Mul, Range, Sub};
+use std::ops::{Add, Div, Mul, Sub};
 use bevy::app::{App, Plugin, Startup};
 use bevy::asset::{AssetServer, Assets, Handle};
 use bevy::log::{info, info_span};
 use bevy::math::Vec3;
 use bevy::pbr::StandardMaterial;
-use bevy::prelude::{Color, Commands, Component, Deref, DerefMut, FromWorld, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, Resource, Transform, Visibility, World};
+use bevy::prelude::{Color, Commands, Deref, DerefMut, FromWorld, Mesh, Mesh3d, MeshMaterial3d, Res, ResMut, Resource, Transform, Visibility, World};
 use bevy::render::mesh::Indices;
 use bevy::utils::hashbrown::HashMap;
 use bevy_rapier3d::dynamics::RigidBody;
@@ -13,7 +13,7 @@ use bevy_rapier3d::math::Vect;
 use noise::{NoiseFn, Perlin};
 use crate::settings::{Settings, CHUNK_HEIGHT, CHUNK_SIZE};
 use crate::utils::point::Point3D;
-use crate::world::block::{BlockCoord, CoordSystemIntegerSize, GameBlockType};
+use crate::world::block::{BlockCoord, GameBlockType};
 use crate::world::chunk::{chunk_coordinates_to_world_transform, render_indices_and_vertices, render_mesh, ChunkCoord, GameChunk};
 use crate::world::game_world::{ChunkKeepAlive, PendingAdditionToGameWorld};
 

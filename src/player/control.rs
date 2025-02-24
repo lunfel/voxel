@@ -409,7 +409,7 @@ pub fn toggle_grab_cursor(window: &mut Window) {
 pub fn cursor_grab(
     keys: Res<ButtonInput<KeyCode>>,
     key_bindings: Res<KeyBindings>,
-    mut app_exit_events: ResMut<Events<AppExit>>,
+    app_exit_events: ResMut<Events<AppExit>>,
     mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     if let Ok(mut window) = primary_window.get_single_mut() {

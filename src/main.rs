@@ -1,8 +1,5 @@
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    prelude::*,
-};
+use bevy::prelude::*;
 use bevy::pbr::wireframe::WireframePlugin;
 use bevy_rapier3d::prelude::*;
 
