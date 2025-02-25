@@ -1,6 +1,7 @@
-use bevy::prelude::{Component, Deref, DerefMut};
+use std::ops::Add;
+use bevy::prelude::{Component, Deref, DerefMut, Vec3};
 use bevy_rapier3d::na::{Point2, Point3};
-use crate::settings::{CoordSystemIntegerSize, CHUNK_SIZE};
+use crate::settings::{CoordSystemIntegerSize, CHUNK_HEIGHT, CHUNK_SIZE};
 
 /// ChunkCoord is the coordinate of the chunk in using the
 /// value 1 for each chunk. Multiply ChunkCoord by CHUNK_SIZE
@@ -12,10 +13,37 @@ pub struct ChunkCoord(Point2<CoordSystemIntegerSize>);
 pub struct GlobalVoxelBlockCoord(Point3<CoordSystemIntegerSize>);
 
 #[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default, Copy)]
-pub struct LocalVoxelBlockCoord(Point3<CoordSystemIntegerSize>);
+pub struct LocalVoxelBlockCoord(pub Point3<CoordSystemIntegerSize>);
 
 #[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default, Copy)]
-pub struct LocalVoxelBlockOffset(usize);
+pub struct LocalVoxelBlockOffset(pub usize);
+
+impl Add<[CoordSystemIntegerSize; 3]> for LocalVoxelBlockOffset {
+    type Output = Result<LocalVoxelBlockOffset, ()>;
+
+    fn add(self, rhs: [CoordSystemIntegerSize; 3]) -> Self::Output {
+        let value = self.0;
+        let rhs_offset = rhs[0] + (rhs[2] * CHUNK_SIZE) + (rhs[1] * CHUNK_SIZE * CHUNK_SIZE);
+        let new_offset = value + rhs_offset as usize;
+
+        if new_offset >= (CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE) as usize {
+            Err(())
+        } else {
+            Ok(Self (value + rhs_offset as usize))
+        }
+    }
+}
+
+impl Add<[CoordSystemIntegerSize; 3]> for &LocalVoxelBlockOffset {
+    type Output = LocalVoxelBlockOffset;
+
+    fn add(self, rhs: [CoordSystemIntegerSize; 3]) -> Self::Output {
+        let value = self.0;
+        let rhs_offset = rhs[0] + (rhs[2] * CHUNK_SIZE) + (rhs[1] * CHUNK_SIZE * CHUNK_SIZE);
+
+        LocalVoxelBlockOffset(value + rhs_offset as usize)
+    }
+}
 
 impl From<(ChunkCoord, LocalVoxelBlockCoord)> for GlobalVoxelBlockCoord {
     fn from((chunk_coord, local_block_coord): (ChunkCoord, LocalVoxelBlockCoord)) -> Self {
@@ -52,15 +80,41 @@ impl From<&mut GlobalVoxelBlockCoord> for (ChunkCoord, LocalVoxelBlockCoord) {
     }
 }
 
-impl From<LocalVoxelBlockCoord> for LocalVoxelBlockOffset {
-    fn from(value: LocalVoxelBlockCoord) -> Self {
-        Self ((value.x + (value.z * CHUNK_SIZE) + (value.y * CHUNK_SIZE * CHUNK_SIZE)) as usize)
+impl From<[usize; 3]> for LocalVoxelBlockCoord {
+    fn from(value: [usize; 3]) -> Self {
+        Self(Point3::new(
+            value[0] as CoordSystemIntegerSize,
+            value[1] as CoordSystemIntegerSize,
+            value[2] as CoordSystemIntegerSize,
+        ))
     }
 }
 
-impl From<&LocalVoxelBlockCoord> for LocalVoxelBlockOffset {
-    fn from(local_voxel_block_coord: &LocalVoxelBlockCoord) -> Self {
-        local_voxel_block_coord.into()
+impl From<[usize; 3]> for LocalVoxelBlockOffset {
+    fn from(value: [usize; 3]) -> Self {
+        let chunk_size = CHUNK_SIZE as usize;
+
+        Self (value[0] + (value[2] * chunk_size) + (value[1] * chunk_size * chunk_size))
+    }
+}
+
+impl TryFrom<LocalVoxelBlockCoord> for LocalVoxelBlockOffset {
+    type Error = ();
+    fn try_from(value: LocalVoxelBlockCoord) -> Result<Self, Self::Error> {
+        let offset = (value.x + (value.z * CHUNK_SIZE) + (value.y * CHUNK_SIZE * CHUNK_SIZE)) as usize;
+
+        if offset >= (CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE) as usize {
+            Err(())
+        } else {
+            Ok(Self (offset))
+        }
+    }
+}
+
+impl TryFrom<&LocalVoxelBlockCoord> for LocalVoxelBlockOffset {
+    type Error = ();
+    fn try_from(local_voxel_block_coord: &LocalVoxelBlockCoord) -> Result<Self, Self::Error> {
+        LocalVoxelBlockOffset::try_from(*local_voxel_block_coord)
     }
 }
 
@@ -170,4 +224,34 @@ mod tests {
 
     // todo: test from offset to local coord
     // todo: test from local coord to offset
+
+    #[test]
+    fn from_tuple_3_to_local_block_offset() {
+        let offset = LocalVoxelBlockOffset::try_from(LocalVoxelBlockCoord(Point3::new(0, 0, 0))).unwrap();
+        let offset = offset + [0, 0, 1];
+
+        let expected_offset = LocalVoxelBlockOffset::try_from(LocalVoxelBlockCoord(Point3::new(0, 0, 1))).unwrap();
+
+        match offset {
+            Ok(v) => assert_eq!(expected_offset, v),
+            Err(_) => assert!(false),
+        }
+
+        let offset = LocalVoxelBlockOffset::try_from(LocalVoxelBlockCoord(Point3::new(4, 9, 14))).unwrap();
+        let offset = offset + [3, 2, 0];
+
+        let expected_offset = LocalVoxelBlockOffset::try_from(LocalVoxelBlockCoord(Point3::new(7, 11, 14))).unwrap();
+
+        match offset {
+            Ok(v) => assert_eq!(expected_offset, v),
+            Err(_) => assert!(false),
+        }
+
+        let offset = LocalVoxelBlockOffset::try_from(LocalVoxelBlockCoord(Point3::new(CHUNK_SIZE - 1, CHUNK_HEIGHT - 1, CHUNK_SIZE - 1))).unwrap();
+        let offset = offset + [1, 1, 1];
+        
+        println!("{:?}", offset);
+
+        assert!(offset.is_err());
+    }
 }

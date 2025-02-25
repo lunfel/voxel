@@ -1,5 +1,6 @@
-mod chunk;
-mod block;
+pub mod chunk;
+pub mod block;
+mod procedural;
 
 use bevy::prelude::*;
 
