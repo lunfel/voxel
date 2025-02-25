@@ -14,6 +14,9 @@ pub struct GlobalVoxelBlockCoord(Point3<CoordSystemIntegerSize>);
 #[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default, Copy)]
 pub struct LocalVoxelBlockCoord(Point3<CoordSystemIntegerSize>);
 
+#[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default, Copy)]
+pub struct LocalVoxelBlockOffset(usize);
+
 impl From<(ChunkCoord, LocalVoxelBlockCoord)> for GlobalVoxelBlockCoord {
     fn from((chunk_coord, local_block_coord): (ChunkCoord, LocalVoxelBlockCoord)) -> Self {
         GlobalVoxelBlockCoord(Point3::new(
@@ -46,6 +49,34 @@ impl From<&GlobalVoxelBlockCoord> for (ChunkCoord, LocalVoxelBlockCoord) {
 impl From<&mut GlobalVoxelBlockCoord> for (ChunkCoord, LocalVoxelBlockCoord) {
     fn from(global_voxel_block_coord: &mut GlobalVoxelBlockCoord) -> Self {
         (*global_voxel_block_coord).into()
+    }
+}
+
+impl From<LocalVoxelBlockCoord> for LocalVoxelBlockOffset {
+    fn from(value: LocalVoxelBlockCoord) -> Self {
+        Self ((value.x + (value.z * CHUNK_SIZE) + (value.y * CHUNK_SIZE * CHUNK_SIZE)) as usize)
+    }
+}
+
+impl From<&LocalVoxelBlockCoord> for LocalVoxelBlockOffset {
+    fn from(local_voxel_block_coord: &LocalVoxelBlockCoord) -> Self {
+        local_voxel_block_coord.into()
+    }
+}
+
+impl From<LocalVoxelBlockOffset> for LocalVoxelBlockCoord {
+    fn from(value: LocalVoxelBlockOffset) -> Self {
+        let chunk_size = CHUNK_SIZE as usize;
+
+        let y = value.0 / (chunk_size * chunk_size);
+        let z = (value.0 % (chunk_size * chunk_size)) / chunk_size;
+        let x = value.0 % chunk_size;
+
+        Self (Point3::new(
+            x as CoordSystemIntegerSize,
+            y as CoordSystemIntegerSize,
+            z as CoordSystemIntegerSize
+        ))
     }
 }
 
@@ -136,4 +167,7 @@ mod tests {
         assert_eq!(global_coord.y, 7);
         assert_eq!(global_coord.z, -49);
     }
+
+    // todo: test from offset to local coord
+    // todo: test from local coord to offset
 }

@@ -1,4 +1,4 @@
-mod coord;
+pub mod coord;
 
 use bevy::prelude::*;
 use bevy::utils::HashMap;
