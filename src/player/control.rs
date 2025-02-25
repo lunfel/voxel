@@ -16,7 +16,7 @@ impl Default for MovementSettings {
     fn default() -> Self {
         Self {
             sensitivity: 0.00012,
-            speed: 40.0, // Used to be 5
+            speed: 20.0, // Used to be 5
         }
     }
 }
@@ -42,7 +42,7 @@ impl Default for KeyBindings {
             move_backward: KeyCode::KeyS,
             move_left: KeyCode::KeyA,
             move_right: KeyCode::KeyD,
-            move_downward: KeyCode::KeyQ,
+            move_downward: KeyCode::KeyC,
             move_upward: KeyCode::Space
         }
     }

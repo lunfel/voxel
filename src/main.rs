@@ -2,12 +2,14 @@ mod player;
 mod game_world;
 mod chunk;
 mod settings;
+mod utils;
 
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 pub use game_world::GameWorldPlugin;
+use crate::chunk::ChunkPlugin;
 use crate::player::PlayerPlugin;
 
 fn main() {
@@ -24,7 +26,8 @@ fn main() {
         .insert_resource(ClearColor(Color::srgba(0.4, 0.7, 0.85, 1.0)))
         .add_plugins((
             GameWorldPlugin,
-            PlayerPlugin
+            PlayerPlugin,
+            ChunkPlugin
         ))
         // Debug plugins
         // This slows down the game by a lot

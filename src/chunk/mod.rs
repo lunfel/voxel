@@ -3,11 +3,14 @@ pub mod block;
 mod procedural;
 
 use bevy::prelude::*;
+use crate::chunk::block::{BlockMaterial, BlockMaterialMap};
 
 pub struct ChunkPlugin;
 
 impl Plugin for ChunkPlugin {
     fn build(&self, app: &mut App) {
-        todo!()
+        app
+            .init_resource::<BlockMaterialMap>()
+            .init_resource::<BlockMaterial>();
     }
 }

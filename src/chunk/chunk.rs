@@ -1,13 +1,11 @@
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
-use crate::chunk::block::{VoxelBlock, VoxelBlockType};
-use crate::game_world::coord::{LocalVoxelBlockCoord, LocalVoxelBlockOffset};
-use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE};
-
-pub type Vertex = [f32; 3];
-type Normal = [f32; 3];
-pub type UV = [f32; 2];
-pub type VertexBuffer = Vec<(Vertex, Normal, UV)>;
+use bevy_rapier3d::math::Vect;
+use bevy_rapier3d::prelude::*;
+use crate::chunk::block::{BlockMaterial, VoxelBlock, VoxelBlockType};
+use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord, LocalVoxelBlockOffset};
+use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, MAX_OFFSET};
+use crate::utils::{VertexBuffer, UV};
 
 impl Default for VoxelChunk {
     fn default() -> Self {
@@ -80,6 +78,14 @@ impl VoxelChunk {
             _ => 0.00
         };
 
+        // println!("Current: {:?}", coord);
+        // println!("Front: {:?}", coord + [0, 0, 1]);
+        // println!("Back: {:?}", coord + [0, 0, -1]);
+        // println!("Right: {:?}", coord + [1, 0, 0]);
+        // println!("Left: {:?}", coord + [-1, 0, 0]);
+        // println!("Top: {:?}", coord + [0, 1, 0]);
+        // println!("Bottom: {:?}", coord + [0, -1, 0]);
+
         let faces: [_; 6] = [
             (
                 coord + [0, 0, 1],
@@ -146,33 +152,61 @@ impl VoxelChunk {
         ];
 
         for (coord, attributes) in faces.iter() {
-            if let Some(cmp_block) = self.get_block(coord) {
-                if cmp_block.block_type == VoxelBlockType::Empty {
-                    attributes.iter()
-                        .for_each(|(position, normals, uv)| {
-                            let v: [f32; 3] = position.iter()
-                                .zip(block_offset)
-                                .map(|(v, offset)| v + offset)
-                                .collect::<Vec<_>>()
-                                .try_into()
-                                .unwrap();
+            if let Some(coord) = coord {
+                if let Some(cmp_block) = self.get_block(coord) {
+                    if cmp_block.block_type == VoxelBlockType::Empty {
+                        attributes.iter()
+                            .for_each(|(position, normals, uv)| {
+                                let v: [f32; 3] = position.iter()
+                                    .zip(block_offset)
+                                    .map(|(v, offset)| v + offset)
+                                    .collect::<Vec<_>>()
+                                    .try_into()
+                                    .unwrap();
 
-                            vertices.push((
-                                v,
-                                *normals,
-                                *uv
-                            ))
-                        });
+                                vertices.push((
+                                    v,
+                                    *normals,
+                                    *uv
+                                ))
+                            });
 
-                    indices_template.iter()
-                        .map(|i| i + (*total_nb_faces) * 4)
-                        .for_each(|i| indices.push(i));
+                        indices_template.iter()
+                            .map(|i| i + (*total_nb_faces) * 4)
+                            .for_each(|i| indices.push(i));
 
-                    *total_nb_faces += 1;
+                        *total_nb_faces += 1;
+                    }
                 }
             }
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct ChunkData {
+    pub mesh: Mesh,
+    pub vertex: Vec<Vect>,
+    pub indices: Vec<[u32; 3]>,
+    pub chunk: VoxelChunk
+}
+
+pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, block_material: &Res<BlockMaterial>, mesh_manager: &mut Assets<Mesh>, commands: &mut Commands) {
+    commands.spawn((
+        Transform::from(chunk_coord),
+        Mesh3d(mesh_manager.add(chunk_data.mesh)),
+        MeshMaterial3d(block_material.0.clone()),
+        chunk_data.chunk,
+        chunk_coord,
+        RigidBody::Fixed,
+        Collider::trimesh(
+            chunk_data.vertex,
+            chunk_data.indices
+        ),
+        // PendingAdditionToGameWorld,
+        // ChunkKeepAlive::default(),
+        Visibility::Visible
+    ));
 }
 
 fn apply_uv_offset(uv: UV, offset: f32) -> UV {
@@ -182,9 +216,9 @@ fn apply_uv_offset(uv: UV, offset: f32) -> UV {
 }
 
 fn all_block_coords_iter() -> impl Iterator<Item = LocalVoxelBlockCoord> {
-    (0..CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE).map(|index| LocalVoxelBlockCoord::from(LocalVoxelBlockOffset(index as usize)))
+    (0..MAX_OFFSET).map(|index| LocalVoxelBlockCoord::from(LocalVoxelBlockOffset(index as usize)))
 }
 
 fn all_block_offsets_iter() -> impl Iterator<Item = LocalVoxelBlockOffset> {
-    (0..CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE).map(|index| LocalVoxelBlockOffset(index as usize))
+    (0..MAX_OFFSET).map(|index| LocalVoxelBlockOffset(index as usize))
 }
