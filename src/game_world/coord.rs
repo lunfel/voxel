@@ -1,5 +1,5 @@
 use std::ops::Add;
-use bevy::prelude::{Component, Deref, DerefMut, Vec3};
+use bevy::prelude::{Component, Deref, DerefMut};
 use bevy_rapier3d::na::{Point2, Point3};
 use crate::settings::{CoordSystemIntegerSize, CHUNK_HEIGHT, CHUNK_SIZE};
 

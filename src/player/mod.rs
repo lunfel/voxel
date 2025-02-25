@@ -17,9 +17,7 @@ impl Plugin for PlayerPlugin {
             .init_resource::<MovementSettings>()
             .init_resource::<KeyBindings>()
             .init_resource::<DelayedSystemTimer>()
-            .add_systems(Startup, (
-                initial_grab_cursor
-            ))
+            .add_systems(Startup, initial_grab_cursor)
             .add_systems(Update, (
                 initial_grab_cursor_delayed,
                 cursor_grab
