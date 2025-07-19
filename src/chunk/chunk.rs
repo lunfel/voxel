@@ -86,9 +86,12 @@ impl VoxelChunk {
         // println!("Top: {:?}", coord + [0, 1, 0]);
         // println!("Bottom: {:?}", coord + [0, -1, 0]);
 
+        let block_coord: LocalVoxelBlockCoord = LocalVoxelBlockCoord::from(*coord);
+
+
         let faces: [_; 6] = [
             (
-                coord + [0, 0, 1],
+                block_coord + [0, 0, 1],
                 [
                     ([-sp.half_size.x, -sp.half_size.y, sp.half_size.z], [0., 0., 1.0], apply_uv_offset([0., 0.], uv_offset)),
                     ([sp.half_size.x, -sp.half_size.y, sp.half_size.z], [0., 0., 1.0], apply_uv_offset([1.0, 0.], uv_offset)),
@@ -97,7 +100,7 @@ impl VoxelChunk {
                 ]
             ),
             (
-                coord + [0, 0, -1],
+                block_coord + [0, 0, -1],
                 [
                     ([-sp.half_size.x, sp.half_size.y, -sp.half_size.z], [0., 0., -1.0], apply_uv_offset([1.0, 0.], uv_offset)),
                     ([sp.half_size.x, sp.half_size.y, -sp.half_size.z], [0., 0., -1.0], apply_uv_offset([0., 0.], uv_offset)),
@@ -106,7 +109,7 @@ impl VoxelChunk {
                 ]
             ),
             (
-                coord + [1, 0, 0],
+                block_coord + [1, 0, 0],
                 [
                     ([sp.half_size.x, -sp.half_size.y, -sp.half_size.z], [1.0, 0., 0.], apply_uv_offset([0., 0.], uv_offset)),
                     ([sp.half_size.x, sp.half_size.y, -sp.half_size.z], [1.0, 0., 0.], apply_uv_offset([1.0, 0.], uv_offset)),
@@ -115,7 +118,7 @@ impl VoxelChunk {
                 ]
             ),
             (
-                coord + [-1, 0, 0],
+                block_coord + [-1, 0, 0],
                 [
                     ([-sp.half_size.x, -sp.half_size.y, sp.half_size.z], [-1.0, 0., 0.], apply_uv_offset([1.0, 0.], uv_offset)),
                     ([-sp.half_size.x, sp.half_size.y, sp.half_size.z], [-1.0, 0., 0.], apply_uv_offset([0., 0.], uv_offset)),
@@ -124,7 +127,7 @@ impl VoxelChunk {
                 ]
             ),
             (
-                coord + [0, 1, 0],
+                block_coord + [0, 1, 0],
                 [
                     ([sp.half_size.x, sp.half_size.y, -sp.half_size.z], [0., 1.0, 0.], apply_uv_offset([1.0, 0.], uv_offset)),
                     ([-sp.half_size.x, sp.half_size.y, -sp.half_size.z], [0., 1.0, 0.], apply_uv_offset([0., 0.], uv_offset)),
@@ -133,7 +136,7 @@ impl VoxelChunk {
                 ]
             ),
             (
-                coord + [0, -1, 0],
+                block_coord + [0, -1, 0],
                 [
                     ([sp.half_size.x, -sp.half_size.y, sp.half_size.z], [0., -1.0, 0.], apply_uv_offset([0., 0.], uv_offset)),
                     ([-sp.half_size.x, -sp.half_size.y, sp.half_size.z], [0., -1.0, 0.], apply_uv_offset([1.0, 0.], uv_offset)),
@@ -143,8 +146,6 @@ impl VoxelChunk {
             )
         ];
 
-        let block_coord: LocalVoxelBlockCoord = LocalVoxelBlockCoord::from(*coord);
-
         let block_offset: [f32; 3] = [
             block_coord.x as f32,
             block_coord.y as f32,
@@ -152,32 +153,43 @@ impl VoxelChunk {
         ];
 
         for (coord, attributes) in faces.iter() {
+            let mut should_render_face = true;
             if let Some(coord) = coord {
-                if let Some(cmp_block) = self.get_block(coord) {
-                    if cmp_block.block_type == VoxelBlockType::Empty {
-                        attributes.iter()
-                            .for_each(|(position, normals, uv)| {
-                                let v: [f32; 3] = position.iter()
-                                    .zip(block_offset)
-                                    .map(|(v, offset)| v + offset)
-                                    .collect::<Vec<_>>()
-                                    .try_into()
-                                    .unwrap();
-
-                                vertices.push((
-                                    v,
-                                    *normals,
-                                    *uv
-                                ))
-                            });
-
-                        indices_template.iter()
-                            .map(|i| i + (*total_nb_faces) * 4)
-                            .for_each(|i| indices.push(i));
-
-                        *total_nb_faces += 1;
+                if coord.is_valid_chunk_voxel_coord() {
+                    if let Some(cmp_block) = self.get_block(coord) {
+                        if cmp_block.block_type != VoxelBlockType::Empty {
+                            should_render_face = false;
+                        }
                     }
                 }
+            }
+
+            if block_coord.x == 0 && block_coord.y == 0 && block_coord.z == 0 {
+                info!("Rendering face {:?}. Should be rendered: {}", coord, should_render_face);
+            }
+
+            if should_render_face {
+                attributes.iter()
+                    .for_each(|(position, normals, uv)| {
+                        let v: [f32; 3] = position.iter()
+                            .zip(block_offset)
+                            .map(|(v, offset)| v + offset)
+                            .collect::<Vec<_>>()
+                            .try_into()
+                            .unwrap();
+
+                        vertices.push((
+                            v,
+                            *normals,
+                            *uv
+                        ))
+                    });
+
+                indices_template.iter()
+                    .map(|i| i + (*total_nb_faces) * 4)
+                    .for_each(|i| indices.push(i));
+
+                *total_nb_faces += 1;
             }
         }
     }

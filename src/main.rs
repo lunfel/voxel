@@ -5,6 +5,7 @@ mod settings;
 mod utils;
 
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
+use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
@@ -37,7 +38,11 @@ fn main() {
         // https://github.com/bevyengine/bevy/issues/8846#issue-1757760152
         // .add_plugins(LogDiagnosticsPlugin::default())
         // .add_plugins(FrameTimeDiagnosticsPlugin)
-        // .add_plugins(WireframePlugin)
+        .add_plugins(WireframePlugin)
+        .insert_resource(WireframeConfig {
+            global: true, // Toggle this to false to disable globally
+            ..Default::default()
+        })
         // .add_plugins(WorldInspectorPlugin::new())
         .run();
 }

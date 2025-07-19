@@ -9,6 +9,7 @@ use bevy_rapier3d::na::Point2;
 use crate::chunk::block::{BlockMaterial, VoxelBlockType};
 use crate::chunk::chunk::{spawn_chunk_from_data, ChunkData, VoxelChunk};
 use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord, LocalVoxelBlockOffset};
+use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE};
 use crate::utils::render_mesh;
 
 pub fn tmp_setup(
@@ -17,18 +18,18 @@ pub fn tmp_setup(
     block_material: Res<BlockMaterial>,
     mut mesh_manager: ResMut<Assets<Mesh>>,
 ) {
-    // circular base
-    commands.spawn((
-        Mesh3d(mesh_manager.add(Circle::new(4.0))),
-        MeshMaterial3d(materials.add(Color::WHITE)),
-        Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
-    ));
-    // cube
-    commands.spawn((
-        Mesh3d(mesh_manager.add(Cuboid::new(1.0, 1.0, 1.0))),
-        MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-        Transform::from_xyz(0.0, 0.5, 0.0),
-    ));
+    // // circular base
+    // commands.spawn((
+    //     Mesh3d(mesh_manager.add(Circle::new(4.0))),
+    //     MeshMaterial3d(materials.add(Color::WHITE)),
+    //     Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+    // ));
+    // // cube
+    // commands.spawn((
+    //     Mesh3d(mesh_manager.add(Cuboid::new(1.0, 1.0, 1.0))),
+    //     MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
+    //     Transform::from_xyz(0.0, 0.5, 0.0),
+    // ));
     // light
     commands.spawn((
         PointLight {
@@ -77,8 +78,10 @@ fn generate_single_demo_chunk() -> VoxelChunk {
         .enumerate()
         .map(|(idx, block)| (LocalVoxelBlockCoord::from(LocalVoxelBlockOffset(idx)), block))
     {
-        if coord.y < 8 && coord.y > 4 {
-            block.block_type = VoxelBlockType::Grass
+        if coord.x == 0 && coord.y == 0 && coord.z == 0 {
+            block.block_type = VoxelBlockType::Dirt;
+        } else {
+            block.block_type = VoxelBlockType::Grass;
         }
     }
 
