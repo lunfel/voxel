@@ -1,6 +1,7 @@
 pub mod chunk;
 pub mod block;
 mod procedural;
+mod perlin;
 
 use bevy::prelude::*;
 use crate::chunk::block::{BlockMaterial, BlockMaterialMap};

@@ -16,6 +16,7 @@ pub enum VoxelBlockType {
 #[derive(Default, Copy, Clone, Debug)]
 pub struct VoxelBlock {
     pub block_type: VoxelBlockType,
+    pub is_fully_surrounded: bool
 }
 
 pub type BlockMaterialHashMap = HashMap<VoxelBlockType, Handle<StandardMaterial>>;

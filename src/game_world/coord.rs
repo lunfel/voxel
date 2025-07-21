@@ -9,6 +9,16 @@ use crate::settings::{CoordSystemIntegerSize, CHUNK_HEIGHT, CHUNK_SIZE, MAX_OFFS
 #[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default, Copy)]
 pub struct ChunkCoord(pub Point2<CoordSystemIntegerSize>);
 
+impl From<ChunkCoord> for Transform {
+    fn from(chunk: ChunkCoord) -> Self {
+        Transform::from_xyz(
+            (chunk.x * CHUNK_SIZE) as f32,
+            0.0,
+            (chunk.y * CHUNK_SIZE) as f32
+        )
+    }
+}
+
 #[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default, Copy)]
 pub struct GlobalVoxelBlockCoord(Point3<CoordSystemIntegerSize>);
 
@@ -18,6 +28,47 @@ pub struct LocalVoxelBlockCoord(pub Point3<CoordSystemIntegerSize>);
 impl LocalVoxelBlockCoord {
     pub fn is_valid_chunk_voxel_coord(&self) -> bool {
         self.x >= 0 && self.y >= 0 && self.z >= 0 && self.x < CHUNK_SIZE && self.y < CHUNK_HEIGHT && self.z < CHUNK_SIZE
+    }
+
+    pub fn front_neighbor(&self) -> Option<Self> {
+        self.z.checked_add(1)
+            .map(|z| Self (Point3::new(self.x, self.y, z)))
+    }
+
+    pub fn back_neighbor(&self) -> Option<Self> {
+        self.z.checked_sub(1)
+            .map(|z| Self (Point3::new(self.x, self.y, z)))
+    }
+
+    pub fn right_neighbor(&self) -> Option<Self> {
+        self.x.checked_add(1)
+            .map(|x| Self (Point3::new(x, self.y, self.z)))
+    }
+
+    pub fn left_neighbor(&self) -> Option<Self> {
+        self.x.checked_sub(1)
+            .map(|x| Self (Point3::new(x, self.y, self.z)))
+    }
+
+    pub fn top_neighbor(&self) -> Option<Self> {
+        self.y.checked_add(1)
+            .map(|y| Self (Point3::new(self.x, y, self.z)))
+    }
+
+    pub fn bottom_neighbor(&self) -> Option<Self> {
+        self.y.checked_sub(1)
+            .map(|y| Self (Point3::new(self.x, y, self.z)))
+    }
+
+    pub fn neighbors(&self) -> [Option<Self>; 6] {
+        [
+            self.front_neighbor(),
+            self.back_neighbor(),
+            self.right_neighbor(),
+            self.left_neighbor(),
+            self.top_neighbor(),
+            self.bottom_neighbor()
+        ]
     }
 }
 
@@ -153,16 +204,6 @@ impl From<LocalVoxelBlockOffset> for LocalVoxelBlockCoord {
             y as CoordSystemIntegerSize,
             z as CoordSystemIntegerSize
         ))
-    }
-}
-
-impl From<ChunkCoord> for Transform {
-    fn from(chunk_coord: ChunkCoord) -> Self {
-        Transform::from_xyz(
-            (chunk_coord.x * CHUNK_SIZE) as f32,
-            0.0,
-            (chunk_coord.y * CHUNK_SIZE) as f32
-        )
     }
 }
 

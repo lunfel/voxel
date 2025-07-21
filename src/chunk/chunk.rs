@@ -13,7 +13,7 @@ impl Default for VoxelChunk {
     }
 }
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Deref, DerefMut)]
 pub struct VoxelChunk(pub [VoxelBlock; (CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE) as usize]);
 
 impl VoxelChunk {
