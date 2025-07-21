@@ -19,6 +19,15 @@ impl From<ChunkCoord> for Transform {
     }
 }
 
+impl From<Transform> for ChunkCoord {
+    fn from(transform: Transform) -> Self {
+        ChunkCoord(Point2::new(
+            (transform.translation.x / CHUNK_SIZE as f32).floor() as CoordSystemIntegerSize,
+            (transform.translation.z / CHUNK_SIZE as f32).floor() as CoordSystemIntegerSize
+        ))
+    }
+}
+
 #[derive(Deref, DerefMut, Clone, PartialEq, Eq, Hash, Component, Debug, Default, Copy)]
 pub struct GlobalVoxelBlockCoord(Point3<CoordSystemIntegerSize>);
 

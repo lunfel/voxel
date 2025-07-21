@@ -164,10 +164,6 @@ impl VoxelChunk {
                 }
             }
 
-            if block_coord.x == 0 && block_coord.y == 0 && block_coord.z == 0 {
-                info!("Rendering face {:?}. Should be rendered: {}", coord, should_render_face);
-            }
-
             if should_render_face {
                 attributes.iter()
                     .for_each(|(position, normals, uv)| {
