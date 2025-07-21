@@ -48,6 +48,11 @@ pub fn begin_generating_map_chunks(
 
                 if game_world.get(&chunk_coord).is_none() {
                     total += 1;
+
+                    if settings.logs.update_as_we_move_enabled {
+                        info!("{:?} has been updated", chunk_coord);
+                    }
+
                     let task = task_pool.spawn(async move {
                         generate_chunk(&chunk_coord)
                     });
