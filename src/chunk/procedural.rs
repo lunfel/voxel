@@ -1,9 +1,9 @@
-use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE};
+use crate::settings::{CoordSystemIntegerSize, CHUNK_HEIGHT, CHUNK_SIZE};
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy_rapier3d::na::Point3;
 use bevy_rapier3d::prelude::Vect;
-use crate::chunk::block::VoxelBlockType;
+use crate::chunk::block::{VoxelBlock, VoxelBlockType};
 use crate::chunk::chunk::{ChunkData, VoxelChunk};
 use crate::chunk::perlin::{PerlinCoord, PerlinCoord3d};
 use noise::{NoiseFn, Perlin};
@@ -92,24 +92,27 @@ where P: Into<ChunkCoord> + Clone
     let height_perlin_new = Perlin::new(1);
 
     let ground_layer_perlin = Perlin::new(2);
-    let coord: ChunkCoord = (*coord).clone().into();
+    let chunk_coord: ChunkCoord = (*coord).clone().into();
 
     let mut game_chunk = VoxelChunk::default();
+    let offset = 0.1153;
 
-    for x in 0..(CHUNK_SIZE as usize) {
-        for y in 0..(CHUNK_HEIGHT as usize) {
-            for z in 0..(CHUNK_SIZE as usize) {
-                let offset = 0.1153;
-                let perlin_coord = PerlinCoord([
-                    (x as f64  + offset) + (coord.x as f64 * CHUNK_SIZE as f64),
-                    (z as f64  + offset) + (coord.y as f64 * CHUNK_SIZE as f64)
-                ]);
+    for x in 0..CHUNK_SIZE {
+        for y in 0..CHUNK_HEIGHT {
+            for z in 0..CHUNK_SIZE {
+                let block_coord = LocalVoxelBlockCoord(Point3::new(x, y, z));
 
-                let perlin_coord3d = PerlinCoord3d([
-                    (x as f64  + offset) + (coord.x as f64 * CHUNK_SIZE as f64),
-                    (y as f64  + offset) * 5.0,
-                    (z as f64  + offset) + (coord.y as f64 * CHUNK_SIZE as f64)
-                ]);
+                let perlin_coord = PerlinCoord::from_voxel_block_coord_with_offset(
+                    block_coord,
+                    chunk_coord,
+                    offset,
+                );
+
+                let perlin_coord3d = PerlinCoord3d::from_voxel_block_coord_with_offset(
+                    block_coord,
+                    chunk_coord,
+                    offset
+                );
 
                 // perlin.get gives an f64 value between -1 and 1
                 // let continentality_value = ((continentality_perlin.get(perlin_coord * continentality_frequency) + 1.0) / 2.0) * continentality_amplitude;
@@ -118,11 +121,11 @@ where P: Into<ChunkCoord> + Clone
                 // let height = (height_value + height_value2) as usize;
 
                 // New version of height map
-                let mut height = 0;
+                let mut height: CoordSystemIntegerSize = 0;
                 for octave in 1..3 {
-                    let frequency = height_lacunarity.powf(octave as f64) * height_base_frequency as f64;
+                    let frequency = height_lacunarity.powf(octave as f64) * height_base_frequency;
                     let amplitude = height_persistence.powf(octave as f64) * height_base_amplitude;
-                    let octave_height = (((height_perlin_new.get(perlin_coord * frequency) + 1.0) / 2.0) * amplitude) as usize;
+                    let octave_height = (((height_perlin_new.get(perlin_coord * frequency) + 1.0) / 2.0) * amplitude) as CoordSystemIntegerSize;
 
                     height += octave_height;
                 }
@@ -132,16 +135,17 @@ where P: Into<ChunkCoord> + Clone
                 // info!("perlin value {}", block_value);
 
                 if height >= y {
-                    game_chunk[x].block_type = match block_value {
-                        0.40..0.41 => VoxelBlockType::Gem,
-                        0.41..0.60 => VoxelBlockType::Rock,
-                        // 0.60..0.68 => GameBlockType::Empty,
-                        0.68..0.70 => VoxelBlockType::Dirt,
-                        0.70..1.0 => VoxelBlockType::Grass,
-                        _ => VoxelBlockType::Dirt,
+                    if let Some(block) = game_chunk.get_block_mut(&block_coord) {
+                        block.block_type = match block_value {
+                            0.40..0.41 => VoxelBlockType::Gem,
+                            0.41..0.60 => VoxelBlockType::Rock,
+                            // 0.60..0.68 => GameBlockType::Empty,
+                            0.68..0.70 => VoxelBlockType::Dirt,
+                            0.70..1.0 => VoxelBlockType::Grass,
+                            _ => VoxelBlockType::Dirt,
+                        }
                     }
                 }
-
 
                 // if height == y {
                 //     game_chunk.blocks[x][y][z].block_type = if ground_layer_perlin.get(perlin_coord.0) > 0.5 {
@@ -154,33 +158,6 @@ where P: Into<ChunkCoord> + Clone
                 // } else if height > y {
                 //     game_chunk.blocks[x][y][z].block_type = GameBlockType::Rock
                 // }
-            }
-        }
-    }
-
-    for x in 0..CHUNK_SIZE {
-        for y in 0..CHUNK_SIZE {
-            for z in 0..CHUNK_SIZE {
-                let block_coord = LocalVoxelBlockCoord(Point3::new(x, y, z));
-                let mut is_fully_surrounded = true;
-                for maybe_neighbor_coord in block_coord.neighbors() {
-                    if let Some(neighbor_coord) = maybe_neighbor_coord {
-                        if let Some (neighbor_block) = game_chunk.get_block(&neighbor_coord) {
-                            if neighbor_block.block_type == VoxelBlockType::Empty {
-                                is_fully_surrounded = false;
-                                break;
-                            }
-                        } else {
-                            is_fully_surrounded = false;
-                        }
-                    } else {
-                        is_fully_surrounded = false;
-                    }
-                }
-
-                game_chunk.update_block(&block_coord, |b| {
-                    b.is_fully_surrounded = is_fully_surrounded;
-                });
             }
         }
     }

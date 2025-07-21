@@ -39,7 +39,7 @@ pub fn setup(
 ) {
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(-10.0, 4.5, -10.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(-10.0, 45.0, -10.0).looking_at(Vec3::ZERO, Vec3::Y),
         ThePlayer,
         Friction {
             coefficient: 0.0,
