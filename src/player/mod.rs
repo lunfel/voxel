@@ -5,8 +5,10 @@ use bevy::prelude::*;
 use bevy_rapier3d::control::{CharacterAutostep, CharacterLength, KinematicCharacterController, KinematicCharacterControllerOutput};
 use bevy_rapier3d::dynamics::{CoefficientCombineRule, RigidBody};
 use bevy_rapier3d::geometry::{Collider, Friction};
-use crate::player::control::{player_look, player_move, InputState, KeyBindings, MovementSettings};
+use crate::player::control::{player_look, player_move, InputState, MovementSettings};
 use crate::player::cursor::{cursor_grab, initial_grab_cursor, initial_grab_cursor_delayed, DelayedSystemTimer};
+
+pub use crate::player::control::KeyBindings;
 
 pub struct PlayerPlugin;
 

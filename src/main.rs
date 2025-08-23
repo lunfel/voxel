@@ -3,8 +3,11 @@ mod game_world;
 mod chunk;
 mod settings;
 mod utils;
+mod screen;
 mod logging;
+mod sun;
 
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::prelude::*;
@@ -14,7 +17,9 @@ pub use game_world::GameWorldPlugin;
 use crate::chunk::ChunkPlugin;
 use crate::logging::LoggingPlugin;
 use crate::player::PlayerPlugin;
+use crate::screen::ScreenPlugin;
 use crate::settings::Settings;
+use crate::sun::SunPlugin;
 
 fn main() {
     App::new()
@@ -33,7 +38,9 @@ fn main() {
             LoggingPlugin,
             GameWorldPlugin,
             PlayerPlugin,
-            ChunkPlugin
+            ChunkPlugin,
+            ScreenPlugin,
+            SunPlugin
         ))
         // Debug plugins
         // This slows down the game by a lot
@@ -41,8 +48,8 @@ fn main() {
         // .add_plugins(DefaultPlugins)
         // https://github.com/bevyengine/bevy/discussions/1289#discussioncomment-304058
         // https://github.com/bevyengine/bevy/issues/8846#issue-1757760152
-        // .add_plugins(LogDiagnosticsPlugin::default())
-        // .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin)
         // .add_plugins(WireframePlugin)
         // .insert_resource(WireframeConfig {
         //     global: true, // Toggle this to false to disable globally

@@ -86,7 +86,7 @@ where P: Into<ChunkCoord> + Clone
     // Should be between 0.0 and 1.0 (it's a percentage)
     let height_persistence: f64 = 0.9;
     let height_lacunarity: f64 = 2.5;
-    let height_base_amplitude: f64 = 80.0;
+    let height_base_amplitude: f64 = 40.0;
     let height_base_frequency: f64 = 1.0 / 120.0;
 
     let height_perlin_new = Perlin::new(1);
