@@ -72,7 +72,7 @@ pub fn receive_generated_map_chunks(
     block_material: Res<BlockMaterial>,
     mut mesh_manager: ResMut<Assets<Mesh>>,
     mut commands: Commands,
-    mut generation_tasks: ResMut<ChunkGenerationTaskMap>
+    mut generation_tasks: ResMut<ChunkGenerationTaskMap>,
 ) {
     generation_tasks.chunks.retain(|chunk_coord, task| {
         let status = block_on(future::poll_once(task));

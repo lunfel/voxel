@@ -4,6 +4,7 @@ use bevy_rapier3d::math::Vect;
 use bevy_rapier3d::prelude::*;
 use crate::chunk::block::{BlockMaterial, VoxelBlock, VoxelBlockType};
 use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord, LocalVoxelBlockOffset};
+use crate::game_world::GameWorld;
 use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, MAX_OFFSET};
 use crate::utils::{VertexBuffer, UV};
 
@@ -199,6 +200,15 @@ pub struct ChunkData {
     pub chunk: VoxelChunk
 }
 
+pub fn add_new_chunks_to_game_world(
+    mut game_world: ResMut<GameWorld>,
+    query: Query<(&ChunkCoord, Entity), Added<VoxelChunk>>
+) {
+    for (coord, entity) in query.iter() {
+        game_world.insert(*coord, entity);
+    }
+}
+
 pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, block_material: &Res<BlockMaterial>, mesh_manager: &mut Assets<Mesh>, commands: &mut Commands) {
     commands.spawn((
         Transform::from(chunk_coord),
@@ -206,13 +216,12 @@ pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, blo
         MeshMaterial3d(block_material.0.clone()),
         chunk_data.chunk,
         chunk_coord,
-        RigidBody::Fixed,
-        Collider::trimesh(
-            chunk_data.vertex,
-            chunk_data.indices
-        ),
-        // PendingAdditionToGameWorld,
-        // ChunkKeepAlive::default(),
+        // todo: re-enabled collisions laterss
+        // RigidBody::Fixed,
+        // Collider::trimesh(
+        //     chunk_data.vertex,
+        //     chunk_data.indices
+        // ),
         Visibility::Visible
     ));
 }
