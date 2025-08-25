@@ -6,11 +6,14 @@ mod utils;
 mod screen;
 mod logging;
 mod sun;
+mod toml_asset;
+mod game_state;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::prelude::*;
+use bevy::render::render_resource::ShaderImport::AssetPath;
 use bevy_rapier3d::prelude::*;
 
 pub use game_world::GameWorldPlugin;
@@ -18,12 +21,13 @@ use crate::chunk::ChunkPlugin;
 use crate::logging::LoggingPlugin;
 use crate::player::PlayerPlugin;
 use crate::screen::ScreenPlugin;
-use crate::settings::Settings;
+use crate::settings::GameSettings;
 use crate::sun::SunPlugin;
+use crate::toml_asset::TomlAssetPlugin;
 
 fn main() {
     App::new()
-        .init_resource::<Settings>()
+        // .init_resource::<Settings>()
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugins(
             DefaultPlugins.set(ImagePlugin {
@@ -32,9 +36,14 @@ fn main() {
                     ..default()
                 }
             })
+                .set(AssetPlugin {
+                    watch_for_changes_override: Some(true),
+                    ..default()
+                })
         )
         .insert_resource(ClearColor(Color::srgba(0.4, 0.7, 0.85, 1.0)))
         .add_plugins((
+            TomlAssetPlugin,
             LoggingPlugin,
             GameWorldPlugin,
             PlayerPlugin,

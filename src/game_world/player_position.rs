@@ -3,7 +3,7 @@ use crate::game_world::coord::ChunkCoord;
 use crate::game_world::generation::WorldGenerationState;
 use crate::logging::LogIntervalTimer;
 use crate::player::ThePlayer;
-use crate::settings::Settings;
+use crate::settings::GameSettings;
 
 #[derive(Resource, Deref, DerefMut, Debug, Clone, Default)]
 pub struct PlayerLastChunkCoord(ChunkCoord);
@@ -36,7 +36,7 @@ pub fn check_for_player_chunk_position_update(
 pub fn update_player_last_chunk_coord(
     mut player_last_chunk_coord: ResMut<PlayerLastChunkCoord>,
     mut ev_changed_coord: EventReader<PlayerChangedChunkCoordEvent>,
-    settings: Res<Settings>,
+    settings: Res<GameSettings>,
 ) {
     if !settings.logs.change_chunk_enabled {
         return;

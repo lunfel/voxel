@@ -1,3 +1,4 @@
+use bevy::asset::ErasedAssetLoader;
 use bevy::prelude::*;
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
 use bevy::utils::HashMap;
@@ -8,7 +9,7 @@ use crate::chunk::procedural::generate_chunk;
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::GameWorld;
 use crate::game_world::player_position::{PlayerChangedChunkCoordEvent, PlayerLastChunkCoord};
-use crate::settings::Settings;
+use crate::settings::{GameSettings, GameSettingsHandle};
 use bevy::tasks::futures_lite::future;
 
 #[derive(Resource, Default)]
@@ -31,10 +32,15 @@ pub fn begin_generating_map_chunks(
     mut ev_changed_coord: EventReader<PlayerChangedChunkCoordEvent>,
     mut generation_tasks: ResMut<ChunkGenerationTaskMap>,
     game_world: Res<GameWorld>,
-    settings: Res<Settings>
+    game_settings_handle: Res<GameSettingsHandle>,
+    game_settings_assets: Res<Assets<GameSettings>>
 ) {
     if ev_changed_coord.is_empty() {
         return;
+    }
+
+    if let  Some(game_settings) = game_settings_assets.get(&game_settings_handle.0) {
+
     }
 
     let mut total = 0;
@@ -91,7 +97,7 @@ pub fn touch_chunks_around_player_at_interval(
     mut query: Query<(&ChunkCoord, &mut ChunkKeepAlive, &mut Visibility)>,
     player_last_chunk_coord: Res<PlayerLastChunkCoord>,
     time: Res<Time>,
-    settings: Res<Settings>
+    settings: Res<GameSettings>
 ) {
     let mut total = 0;
     for (coord, mut keepalive, mut visibility) in query.iter_mut() {

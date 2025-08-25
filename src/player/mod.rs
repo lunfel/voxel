@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::control::{CharacterAutostep, CharacterLength, KinematicCharacterController, KinematicCharacterControllerOutput};
 use bevy_rapier3d::dynamics::{CoefficientCombineRule, RigidBody};
 use bevy_rapier3d::geometry::{Collider, Friction};
+use crate::game_state::GameState;
 use crate::player::control::{player_look, player_move, InputState, MovementSettings};
 use crate::player::cursor::{cursor_grab, initial_grab_cursor, initial_grab_cursor_delayed, DelayedSystemTimer};
 
@@ -14,7 +15,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
+        app.add_systems(OnEnter(GameState::Ready), setup)
             // cursor
             .init_resource::<MovementSettings>()
             .init_resource::<KeyBindings>()

@@ -12,11 +12,14 @@ use std::fs;
 use std::process::exit;
 use toml;
 
-#[derive(Debug, Deserialize, Resource)]
-pub struct Settings {
+#[derive(Debug, Deserialize, Asset, TypePath)]
+pub struct GameSettings {
     pub world: World,
     pub logs: Logs
 }
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct GameSettingsHandle(pub Handle<GameSettings>);
 
 #[derive(Debug, Deserialize, Default)]
 pub struct World {
@@ -31,10 +34,10 @@ pub struct Logs {
     pub update_as_we_move_enabled: bool
 }
 
-impl Default for Settings {
+impl Default for GameSettings {
     fn default() -> Self {
         // Variable that holds the filename as a `&str`.
-        let filename = "game.toml";
+        let filename = "game.toml_asset";
 
         // Read the contents of the file using a `match` block
         // to return the `data: Ok(c)` as a `String`
