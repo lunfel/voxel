@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
+use bevy::utils::info;
 use bevy_rapier3d::math::Vect;
 use bevy_rapier3d::prelude::*;
 use crate::chunk::block::{BlockMaterial, VoxelBlock, VoxelBlockType};
@@ -210,6 +211,7 @@ pub fn add_new_chunks_to_game_world(
 }
 
 pub fn spawn_chunk_from_data(chunk_data: ChunkData, chunk_coord: ChunkCoord, block_material: &Res<BlockMaterial>, mesh_manager: &mut Assets<Mesh>, commands: &mut Commands) {
+    info!("Spawning chunk from data");
     commands.spawn((
         Transform::from(chunk_coord),
         Mesh3d(mesh_manager.add(chunk_data.mesh)),

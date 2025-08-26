@@ -12,10 +12,11 @@ use std::fs;
 use std::process::exit;
 use toml;
 
-#[derive(Debug, Deserialize, Asset, TypePath)]
+#[derive(Debug, Deserialize, Asset, TypePath, Clone)]
 pub struct GameSettings {
     pub world: World,
-    pub logs: Logs
+    pub logs: Logs,
+    pub proccedural: Procedural
 }
 
 #[derive(Resource, Deref, DerefMut)]
@@ -23,17 +24,28 @@ pub struct GameSettingsHandle {
     pub handle: Handle<GameSettings>
 }
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Clone)]
 pub struct World {
     pub world_dimension: i32,
     pub preload_extra_distance: i32
 }
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Clone)]
 pub struct Logs {
     pub triangle_count_enabled: bool,
     pub change_chunk_enabled: bool,
     pub update_as_we_move_enabled: bool
+}
+
+#[derive(Debug, Deserialize, Default, Clone)]
+pub struct Procedural {
+    pub base_noise: NoiseConfiguration
+}
+
+#[derive(Debug, Deserialize, Default, Clone)]
+pub struct NoiseConfiguration {
+    pub frequency: f64,
+    pub amplitude: f64
 }
 
 impl Default for GameSettings {

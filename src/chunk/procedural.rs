@@ -1,4 +1,4 @@
-use crate::settings::{CoordSystemIntegerSize, CHUNK_HEIGHT, CHUNK_SIZE};
+use crate::settings::{CoordSystemIntegerSize, GameSettings, CHUNK_HEIGHT, CHUNK_SIZE};
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy_rapier3d::na::Point3;
@@ -6,12 +6,12 @@ use bevy_rapier3d::prelude::Vect;
 use crate::chunk::block::{VoxelBlock, VoxelBlockType};
 use crate::chunk::chunk::{ChunkData, VoxelChunk};
 use crate::chunk::perlin::{PerlinCoord, PerlinCoord3d};
-use noise::{NoiseFn, Perlin};
+use noise::{NoiseFn, Perlin, Simplex};
 use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord};
 use crate::utils::render_mesh;
 
-pub fn generate_chunk(chunk_coord: &ChunkCoord) -> ChunkData {
-    let chunk = generate_single_chunk(chunk_coord);
+pub fn generate_chunk(chunk_coord: &ChunkCoord, game_settings: &GameSettings) -> ChunkData {
+    let chunk = generate_single_chunk(chunk_coord, game_settings);
 
     let (indices, vertices) =  chunk.render_indices_and_vertices();
 
@@ -64,7 +64,7 @@ pub fn generate_chunk(chunk_coord: &ChunkCoord) -> ChunkData {
     }
 }
 
-pub fn generate_single_chunk<P>(coord: &P) -> VoxelChunk
+pub fn generate_single_chunk<P>(coord: &P, game_settings: &GameSettings) -> VoxelChunk
 where P: Into<ChunkCoord> + Clone
 {
     let _span = info_span!("generate_single_chunk").entered();
@@ -120,6 +120,7 @@ where P: Into<ChunkCoord> + Clone
                 // let height_value2 = ((height_perlin2.get(perlin_coord * frequency2) + 1.0) / 2.0) * amplitude2 * (continentality_value + 0.1);
                 // let height = (height_value + height_value2) as usize;
 
+                // https://www.reddit.com/r/proceduralgeneration/comments/6eubj7/how_can_i_add_octaves_persistence_lacunarity/
                 // New version of height map
                 let mut height: CoordSystemIntegerSize = 0;
                 for octave in 1..3 {

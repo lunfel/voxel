@@ -2,6 +2,7 @@ use crate::settings::{GameSettings, GameSettingsHandle};
 use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, LoadContext};
 use bevy::prelude::*;
+use bevy::utils::info;
 use crate::chunk::chunk::VoxelChunk;
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::GameWorld;
@@ -12,6 +13,7 @@ impl Plugin for TomlAssetPlugin {
     fn build(&self, app: &mut App) {
         app.init_asset::<GameSettings>()
             .add_systems(Startup, setup)
+            .add_systems(Update, listen_to_settings_loaded)
             .register_asset_loader(TomlAssetLoader);
     }
 }
@@ -26,7 +28,6 @@ fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
 
 fn listen_to_settings_loaded(
     mut ev_asset: EventReader<AssetEvent<GameSettings>>,
-    mut assets: ResMut<Assets<GameSettings>>,
     game_settings_handle: Res<GameSettingsHandle>,
     query: Query<Entity, With<VoxelChunk>>,
     mut game_world: ResMut<GameWorld>,
@@ -35,12 +36,9 @@ fn listen_to_settings_loaded(
     player_last_chunk_coord: Res<crate::game_world::PlayerLastChunkCoord>
 ) {
     for ev in ev_asset.read() {
+        info!("Processing asset event {:?}", ev);
         match ev {
-            AssetEvent::LoadedWithDependencies { id } => {
-                // let settings = assets.get_mut(id).unwrap();
-
-                let game_settings = assets.get(&game_settings_handle.handle).expect("This should have been loaded, but was not");
-
+            AssetEvent::Added { id } => {
                 if game_settings_handle.handle.id() == *id {
                     for entity in query.iter() {
                         commands.entity(entity)
@@ -55,7 +53,9 @@ fn listen_to_settings_loaded(
                     });
                 }
             }
-            _ => {}
+            _ => {
+
+            }
         }
     }
 }
@@ -73,6 +73,8 @@ impl AssetLoader for TomlAssetLoader {
         _settings: &Self::Settings,
         _load_context: &mut LoadContext<'_>,
     ) -> Result<GameSettings, Self::Error> {
+        info!("Loading toml asset");
+
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
 

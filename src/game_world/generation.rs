@@ -41,6 +41,8 @@ pub fn begin_generating_map_chunks(
 
     let game_settings = game_settings_assets.get(&game_settings_handle.handle).expect("This should have been loaded, but was not");
 
+    info!("Game settings from begin_generating_map_chunks: {:?}", game_settings);
+
     let mut total = 0;
 
     let task_pool = AsyncComputeTaskPool::get();
@@ -57,8 +59,9 @@ pub fn begin_generating_map_chunks(
                         info!("{:?} has been updated", chunk_coord);
                     }
 
+                    let gs = game_settings.clone();
                     let task = task_pool.spawn(async move {
-                        generate_chunk(&chunk_coord)
+                        generate_chunk(&chunk_coord, &gs)
                     });
 
                     generation_tasks.chunks.insert(chunk_coord, task);

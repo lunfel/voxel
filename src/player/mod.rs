@@ -15,7 +15,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Ready), setup)
+        app.add_systems(Startup, setup)
             // cursor
             .init_resource::<MovementSettings>()
             .init_resource::<KeyBindings>()

@@ -1,6 +1,6 @@
 [world]
 # Number of chunks in each direction from the player
-world_dimension = 8
+world_dimension = 4
 # Number of chunks to preload (adds on top of world_dimension)
 preload_extra_distance = 2
 
@@ -8,3 +8,7 @@ preload_extra_distance = 2
 triangle_count_enabled = true
 change_chunk_enabled = true
 update_as_we_move_enabled = true
+
+[world_generation.base_noise]
+frequency = 180
+amplitude =
