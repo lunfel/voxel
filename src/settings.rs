@@ -19,7 +19,9 @@ pub struct GameSettings {
 }
 
 #[derive(Resource, Deref, DerefMut)]
-pub struct GameSettingsHandle(pub Handle<GameSettings>);
+pub struct GameSettingsHandle {
+    pub handle: Handle<GameSettings>
+}
 
 #[derive(Debug, Deserialize, Default)]
 pub struct World {
@@ -37,7 +39,7 @@ pub struct Logs {
 impl Default for GameSettings {
     fn default() -> Self {
         // Variable that holds the filename as a `&str`.
-        let filename = "game.toml_asset";
+        let filename = "game.toml";
 
         // Read the contents of the file using a `match` block
         // to return the `data: Ok(c)` as a `String`

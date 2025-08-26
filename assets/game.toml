@@ -1,6 +1,6 @@
 [world]
 # Number of chunks in each direction from the player
-world_dimension = 16
+world_dimension = 8
 # Number of chunks to preload (adds on top of world_dimension)
 preload_extra_distance = 2
 

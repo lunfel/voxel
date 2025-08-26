@@ -39,23 +39,21 @@ pub fn begin_generating_map_chunks(
         return;
     }
 
-    if let  Some(game_settings) = game_settings_assets.get(&game_settings_handle.0) {
-
-    }
+    let game_settings = game_settings_assets.get(&game_settings_handle.handle).expect("This should have been loaded, but was not");
 
     let mut total = 0;
 
     let task_pool = AsyncComputeTaskPool::get();
 
     for ev in ev_changed_coord.read() {
-        for x in (ev.new_position.x - settings.world.world_dimension - settings.world.preload_extra_distance)..(ev.new_position.x + settings.world.world_dimension + settings.world.preload_extra_distance) {
-            for y in (ev.new_position.y - settings.world.world_dimension - settings.world.preload_extra_distance)..(ev.new_position.y + settings.world.world_dimension + settings.world.preload_extra_distance) {
+        for x in (ev.new_position.x - game_settings.world.world_dimension - game_settings.world.preload_extra_distance)..(ev.new_position.x + game_settings.world.world_dimension + game_settings.world.preload_extra_distance) {
+            for y in (ev.new_position.y - game_settings.world.world_dimension - game_settings.world.preload_extra_distance)..(ev.new_position.y + game_settings.world.world_dimension + game_settings.world.preload_extra_distance) {
                 let chunk_coord = ChunkCoord(Point2::new(x, y));
 
                 if game_world.get(&chunk_coord).is_none() {
                     total += 1;
 
-                    if settings.logs.update_as_we_move_enabled {
+                    if game_settings.logs.update_as_we_move_enabled {
                         info!("{:?} has been updated", chunk_coord);
                     }
 
@@ -69,7 +67,7 @@ pub fn begin_generating_map_chunks(
         }
     }
 
-    if settings.logs.update_as_we_move_enabled {
+    if game_settings.logs.update_as_we_move_enabled {
         info!("Generated {} chunks", total);
     }
 }
@@ -97,22 +95,25 @@ pub fn touch_chunks_around_player_at_interval(
     mut query: Query<(&ChunkCoord, &mut ChunkKeepAlive, &mut Visibility)>,
     player_last_chunk_coord: Res<PlayerLastChunkCoord>,
     time: Res<Time>,
-    settings: Res<GameSettings>
+    game_settings_handle: Res<GameSettingsHandle>,
+    game_settings_assets: Res<Assets<GameSettings>>
 ) {
     let mut total = 0;
+    let game_settings = game_settings_assets.get(&game_settings_handle.handle).expect("This should have been loaded, but was not");
+
     for (coord, mut keepalive, mut visibility) in query.iter_mut() {
-        if (coord.x - player_last_chunk_coord.x).abs() < (settings.world.world_dimension + settings.world.preload_extra_distance) && (coord.y - player_last_chunk_coord.y).abs() < (settings.world.world_dimension + settings.world.preload_extra_distance) {
+        if (coord.x - player_last_chunk_coord.x).abs() < (game_settings.world.world_dimension + game_settings.world.preload_extra_distance) && (coord.y - player_last_chunk_coord.y).abs() < (game_settings.world.world_dimension + game_settings.world.preload_extra_distance) {
             keepalive.last_touch = time.elapsed_secs();
 
             total += 1;
 
-            if (coord.x - player_last_chunk_coord.x).abs() < settings.world.world_dimension && (coord.y - player_last_chunk_coord.y).abs() < settings.world.world_dimension {
+            if (coord.x - player_last_chunk_coord.x).abs() < game_settings.world.world_dimension && (coord.y - player_last_chunk_coord.y).abs() < game_settings.world.world_dimension {
                 *visibility = Visibility::Visible;
             }
         }
     }
 
-    if total > 0 && settings.logs.update_as_we_move_enabled {
+    if total > 0 && game_settings.logs.update_as_we_move_enabled {
         info!("Touch chunks {} times", total);
     }
 }
