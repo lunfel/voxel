@@ -2,6 +2,7 @@ pub mod chunk;
 pub mod block;
 pub mod procedural;
 mod perlin;
+pub mod noise;
 
 use bevy::prelude::*;
 use crate::chunk::block::{BlockMaterial, BlockMaterialMap};

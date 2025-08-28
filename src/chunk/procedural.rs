@@ -7,6 +7,7 @@ use crate::chunk::block::{VoxelBlock, VoxelBlockType};
 use crate::chunk::chunk::{ChunkData, VoxelChunk};
 use crate::chunk::perlin::{PerlinCoord, PerlinCoord3d};
 use noise::{NoiseFn, Perlin, Simplex};
+use crate::chunk::noise::Noise;
 use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord};
 use crate::utils::render_mesh;
 
@@ -69,71 +70,40 @@ where P: Into<ChunkCoord> + Clone
 {
     let _span = info_span!("generate_single_chunk").entered();
 
-    let continentality_perlin = Perlin::new(10);
-    let continentality_frequency = 1.0 / 180.0;
-    let continentality_amplitude = 1.0;
+    let block_noise = &game_settings.procedural.block_noise;
+    let height_noise = &game_settings.procedural.base_noise;
 
-    let block_perlin = Perlin::new(20);
-
-    let height_perlin = Perlin::new(1);
-    let frequency1 = 1.0 / 40.0;
-    let amplitude1 = 50.0;
-
-    let height_perlin2 = Perlin::new(3);
-    let frequency2 = 1.0 / 15.0;
-    let amplitude2 = 25.0;
-
-    // Should be between 0.0 and 1.0 (it's a percentage)
-    let height_persistence: f64 = 0.9;
-    let height_lacunarity: f64 = 2.5;
-    let height_base_amplitude: f64 = 40.0;
-    let height_base_frequency: f64 = 1.0 / 120.0;
-
-    let height_perlin_new = Perlin::new(1);
-
-    let ground_layer_perlin = Perlin::new(2);
     let chunk_coord: ChunkCoord = (*coord).clone().into();
 
     let mut game_chunk = VoxelChunk::default();
     let offset = 0.1153;
+
+    let mut min_value: f64 = 1000.0;
+    let mut max_value: f64 = -1000.0;
 
     for x in 0..CHUNK_SIZE {
         for y in 0..CHUNK_HEIGHT {
             for z in 0..CHUNK_SIZE {
                 let block_coord = LocalVoxelBlockCoord(Point3::new(x, y, z));
 
-                let perlin_coord = PerlinCoord::from_voxel_block_coord_with_offset(
-                    block_coord,
-                    chunk_coord,
-                    offset,
-                );
-
-                let perlin_coord3d = PerlinCoord3d::from_voxel_block_coord_with_offset(
-                    block_coord,
-                    chunk_coord,
-                    offset
-                );
-
-                // perlin.get gives an f64 value between -1 and 1
-                // let continentality_value = ((continentality_perlin.get(perlin_coord * continentality_frequency) + 1.0) / 2.0) * continentality_amplitude;
-                // let height_value = ((height_perlin.get(perlin_coord * frequency1) + 1.0) / 2.0) * (amplitude1 * (continentality_value + 0.1));
-                // let height_value2 = ((height_perlin2.get(perlin_coord * frequency2) + 1.0) / 2.0) * amplitude2 * (continentality_value + 0.1);
-                // let height = (height_value + height_value2) as usize;
-
                 // https://www.reddit.com/r/proceduralgeneration/comments/6eubj7/how_can_i_add_octaves_persistence_lacunarity/
                 // New version of height map
-                let mut height: CoordSystemIntegerSize = 0;
-                for octave in 1..3 {
-                    let frequency = height_lacunarity.powf(octave as f64) * height_base_frequency;
-                    let amplitude = height_persistence.powf(octave as f64) * height_base_amplitude;
-                    let octave_height = (((height_perlin_new.get(perlin_coord * frequency) + 1.0) / 2.0) * amplitude) as CoordSystemIntegerSize;
+                let height: CoordSystemIntegerSize = height_noise.get([
+                    (block_coord.x as f64) + (chunk_coord.x as f64 * CHUNK_SIZE as f64),
+                    (block_coord.y as f64),
+                    (block_coord.z as f64) + (chunk_coord.y as f64 * CHUNK_SIZE as f64)
+                ]) as CoordSystemIntegerSize;
 
-                    height += octave_height;
-                }
+                let block_value = block_noise.get(
+                    [
+                        (block_coord.x as f64) + (chunk_coord.x as f64 * CHUNK_SIZE as f64),
+                        (block_coord.y as f64),
+                        (block_coord.z as f64) + (chunk_coord.y as f64 * CHUNK_SIZE as f64)
+                    ]
+                );
 
-                let block_value = (block_perlin.get(perlin_coord3d * (1.0 / 40.0)) + 1.0) / 2.0;
-
-                // info!("perlin value {}", block_value);
+                min_value = min_value.min(block_value);
+                max_value = max_value.max(block_value);
 
                 if height >= y {
                     if let Some(block) = game_chunk.get_block_mut(&block_coord) {
@@ -162,6 +132,8 @@ where P: Into<ChunkCoord> + Clone
             }
         }
     }
+
+    // info!("perlin min: {}, max: {}", min_value, max_value);
 
     game_chunk
 }

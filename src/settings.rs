@@ -11,12 +11,13 @@ use std::default::Default;
 use std::fs;
 use std::process::exit;
 use toml;
+use crate::chunk::noise::Noise;
 
 #[derive(Debug, Deserialize, Asset, TypePath, Clone)]
 pub struct GameSettings {
     pub world: World,
     pub logs: Logs,
-    pub proccedural: Procedural
+    pub procedural: Procedural
 }
 
 #[derive(Resource, Deref, DerefMut)]
@@ -39,13 +40,8 @@ pub struct Logs {
 
 #[derive(Debug, Deserialize, Default, Clone)]
 pub struct Procedural {
-    pub base_noise: NoiseConfiguration
-}
-
-#[derive(Debug, Deserialize, Default, Clone)]
-pub struct NoiseConfiguration {
-    pub frequency: f64,
-    pub amplitude: f64
+    pub base_noise: Noise,
+    pub block_noise: Noise,
 }
 
 impl Default for GameSettings {

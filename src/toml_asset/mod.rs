@@ -38,7 +38,7 @@ fn listen_to_settings_loaded(
     for ev in ev_asset.read() {
         info!("Processing asset event {:?}", ev);
         match ev {
-            AssetEvent::Added { id } => {
+            AssetEvent::Added { id }|AssetEvent::Modified { id } => {
                 if game_settings_handle.handle.id() == *id {
                     for entity in query.iter() {
                         commands.entity(entity)
