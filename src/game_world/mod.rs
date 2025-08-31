@@ -10,8 +10,8 @@ use crate::game_world::generation::{
 use crate::game_world::player_position::{
     check_for_player_chunk_position_update, update_player_last_chunk_coord,
 };
+use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 
 pub use player_position::PlayerChangedChunkCoordEvent;
 pub use player_position::PlayerLastChunkCoord;

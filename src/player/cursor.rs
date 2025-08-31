@@ -21,7 +21,7 @@ pub fn initial_grab_cursor_delayed(
     if !*has_run {
         timer.tick(time.delta());
         if timer.finished() {
-            if let Ok(mut window) = primary_window.get_single_mut() {
+            if let Ok(mut window) = primary_window.single_mut() {
                 toggle_grab_cursor(&mut window);
             } else {
                 warn!("Primary window not found for `initial_grab_cursor`");
@@ -51,7 +51,7 @@ pub fn cursor_grab(
     // app_exit_events: ResMut<Events<AppExit>>,
     mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    if let Ok(mut window) = primary_window.get_single_mut() {
+    if let Ok(mut window) = primary_window.single_mut() {
         if keys.just_pressed(key_bindings.toggle_grab_cursor) {
             toggle_grab_cursor(&mut window);
             // app_exit_events.send(AppExit);

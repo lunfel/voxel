@@ -43,7 +43,7 @@ fn listen_to_settings_loaded(
 
                     game_world.clear();
 
-                    ev_changed_coord.send(crate::game_world::PlayerChangedChunkCoordEvent {
+                    ev_changed_coord.write(crate::game_world::PlayerChangedChunkCoordEvent {
                         new_position: ChunkCoord(player_last_chunk_coord.0),
                         previous_position: ChunkCoord(player_last_chunk_coord.0),
                     });

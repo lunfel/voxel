@@ -18,11 +18,11 @@ pub fn check_for_player_chunk_position_update(
     player: Query<&Transform, With<ThePlayer>>,
     mut ev_changed_coord: EventWriter<PlayerChangedChunkCoordEvent>,
 ) {
-    if let Ok(transform) = player.get_single() {
+    if let Ok(transform) = player.single() {
         let player_chunk_coord: ChunkCoord = ChunkCoord::from(*transform);
 
         if player_chunk_coord != player_last_chunk_coord.0 {
-            ev_changed_coord.send(PlayerChangedChunkCoordEvent {
+            ev_changed_coord.write(PlayerChangedChunkCoordEvent {
                 new_position: player_chunk_coord,
                 previous_position: player_last_chunk_coord.0,
             });

@@ -1,7 +1,7 @@
 use bevy::asset::Handle;
 use bevy::pbr::StandardMaterial;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
-use bevy::utils::hashbrown::HashMap;
 
 #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum VoxelBlockType {

@@ -20,15 +20,16 @@ fn toggle_fullscreen(
     mut window: Query<(&mut Window, Entity)>,
     mut focused_event: EventWriter<CursorMoved>,
 ) {
-    if let Ok((mut window, entity)) = window.get_single_mut() {
+    if let Ok((mut window, entity)) = window.single_mut() {
         if keys.just_pressed(key_bindings.toggle_fullscreen) {
-            window.mode = WindowMode::Fullscreen(MonitorSelection::Primary);
+            window.mode =
+                WindowMode::Fullscreen(MonitorSelection::Primary, VideoModeSelection::Current);
 
             let width = window.width();
             let height = window.height();
             let position = Vec2::new(width / 2.0, height / 2.0);
             window.set_cursor_position(Some(position));
-            focused_event.send(CursorMoved {
+            focused_event.write(CursorMoved {
                 window: entity,
                 delta: None,
                 position,
@@ -40,7 +41,7 @@ fn toggle_fullscreen(
             let height = window.height();
             let position = Vec2::new(width / 2.0, height / 2.0);
             window.set_cursor_position(Some(position));
-            focused_event.send(CursorMoved {
+            focused_event.write(CursorMoved {
                 window: entity,
                 delta: None,
                 position,
