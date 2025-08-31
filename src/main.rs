@@ -1,5 +1,4 @@
 mod chunk;
-mod game_state;
 mod game_world;
 mod logging;
 mod player;

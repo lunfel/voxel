@@ -17,6 +17,7 @@ impl Default for VoxelChunk {
 pub struct VoxelChunk(pub [VoxelBlock; (CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE) as usize]);
 
 impl VoxelChunk {
+    #[allow(dead_code)]
     pub fn update_block<P, F>(&mut self, into_coord: &P, update: F)
     where
         P: Into<LocalVoxelBlockOffset> + Clone,
@@ -302,7 +303,9 @@ impl VoxelChunk {
 #[derive(Debug, Clone)]
 pub struct ChunkData {
     pub mesh: Mesh,
+    #[allow(dead_code)]
     pub vertex: Vec<Vect>,
+    #[allow(dead_code)]
     pub indices: Vec<[u32; 3]>,
     pub chunk: VoxelChunk,
 }
@@ -346,6 +349,7 @@ fn apply_uv_offset(uv: UV, offset: f32) -> UV {
     [u / 4.0 + offset, v]
 }
 
+#[allow(dead_code)]
 fn all_block_coords_iter() -> impl Iterator<Item = LocalVoxelBlockCoord> {
     (0..MAX_OFFSET).map(|index| LocalVoxelBlockCoord::from(LocalVoxelBlockOffset(index as usize)))
 }

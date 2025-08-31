@@ -1,5 +1,5 @@
 use crate::chunk::block::VoxelBlockType;
-use crate::chunk::chunk::{ChunkData, VoxelChunk};
+use crate::chunk::voxel_chunk::{ChunkData, VoxelChunk};
 use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord};
 use crate::settings::{CoordSystemIntegerSize, GameSettings, CHUNK_HEIGHT, CHUNK_SIZE};
 use crate::utils::render_mesh;
@@ -76,7 +76,6 @@ where
     let chunk_coord: ChunkCoord = (*coord).clone().into();
 
     let mut game_chunk = VoxelChunk::default();
-    let offset = 0.1153;
 
     let mut min_value: f64 = 1000.0;
     let mut max_value: f64 = -1000.0;

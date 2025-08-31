@@ -4,7 +4,7 @@ use bevy::input::mouse::MouseMotion;
 use bevy::input::ButtonInput;
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
-use bevy_rapier3d::control::{KinematicCharacterController, KinematicCharacterControllerOutput};
+use bevy_rapier3d::control::KinematicCharacterController;
 
 #[derive(Resource)]
 pub struct MovementSettings {
@@ -63,14 +63,13 @@ pub fn player_move(
         (
             &Transform,
             &mut KinematicCharacterController,
-            &KinematicCharacterControllerOutput,
         ),
         With<ThePlayer>,
     >,
 ) {
     let window = primary_window.single();
 
-    for (transform, mut character_controller, character_output) in query.iter_mut() {
+    for (transform, mut character_controller) in query.iter_mut() {
         let mut move_velocity = Vec3::ZERO;
 
         for key in keys.get_pressed() {

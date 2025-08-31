@@ -1,11 +1,10 @@
 pub mod block;
-pub mod chunk;
+pub mod voxel_chunk;
 pub mod noise;
-mod perlin;
 pub mod procedural;
 
 use crate::chunk::block::{BlockMaterial, BlockMaterialMap};
-use crate::chunk::chunk::add_new_chunks_to_game_world;
+use crate::chunk::voxel_chunk::add_new_chunks_to_game_world;
 use bevy::prelude::*;
 
 pub struct ChunkPlugin;

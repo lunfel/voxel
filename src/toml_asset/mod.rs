@@ -1,4 +1,4 @@
-use crate::chunk::chunk::VoxelChunk;
+use crate::chunk::voxel_chunk::VoxelChunk;
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::GameWorld;
 use crate::settings::{GameSettings, GameSettingsHandle};

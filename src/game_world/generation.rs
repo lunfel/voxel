@@ -1,5 +1,5 @@
 use crate::chunk::block::BlockMaterial;
-use crate::chunk::chunk::{spawn_chunk_from_data, ChunkData};
+use crate::chunk::voxel_chunk::{spawn_chunk_from_data, ChunkData};
 use crate::chunk::procedural::generate_chunk;
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::player_position::{PlayerChangedChunkCoordEvent, PlayerLastChunkCoord};
@@ -10,11 +10,6 @@ use bevy::tasks::futures_lite::future;
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
 use bevy::utils::HashMap;
 use bevy_rapier3d::na::Point2;
-
-#[derive(Resource, Default)]
-pub struct WorldGenerationState {
-    pub finished_generating: bool,
-}
 
 #[derive(Resource, Debug, Default)]
 pub struct ChunkGenerationTaskMap {

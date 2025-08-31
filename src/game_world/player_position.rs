@@ -1,6 +1,4 @@
 use crate::game_world::coord::ChunkCoord;
-use crate::game_world::generation::WorldGenerationState;
-use crate::logging::LogIntervalTimer;
 use crate::player::ThePlayer;
 use crate::settings::{GameSettings, GameSettingsHandle};
 use bevy::prelude::*;
@@ -11,13 +9,12 @@ pub struct PlayerLastChunkCoord(ChunkCoord);
 #[derive(Event)]
 pub struct PlayerChangedChunkCoordEvent {
     pub new_position: ChunkCoord,
+    #[allow(dead_code)]
     pub previous_position: ChunkCoord,
 }
 
 pub fn check_for_player_chunk_position_update(
-    world_generation_state: ResMut<WorldGenerationState>,
     player_last_chunk_coord: Res<PlayerLastChunkCoord>,
-    log_interval: Res<LogIntervalTimer>,
     player: Query<&Transform, With<ThePlayer>>,
     mut ev_changed_coord: EventWriter<PlayerChangedChunkCoordEvent>,
 ) {
