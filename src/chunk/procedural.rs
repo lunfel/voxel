@@ -1,7 +1,5 @@
-use crate::chunk::block::{VoxelBlock, VoxelBlockType};
+use crate::chunk::block::VoxelBlockType;
 use crate::chunk::chunk::{ChunkData, VoxelChunk};
-use crate::chunk::noise::Noise;
-use crate::chunk::perlin::{PerlinCoord, PerlinCoord3d};
 use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord};
 use crate::settings::{CoordSystemIntegerSize, GameSettings, CHUNK_HEIGHT, CHUNK_SIZE};
 use crate::utils::render_mesh;
@@ -9,7 +7,7 @@ use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy_rapier3d::na::Point3;
 use bevy_rapier3d::prelude::Vect;
-use noise::{NoiseFn, Perlin, Simplex};
+use noise::NoiseFn;
 
 pub fn generate_chunk(chunk_coord: &ChunkCoord, game_settings: &GameSettings) -> ChunkData {
     let chunk = generate_single_chunk(chunk_coord, game_settings);

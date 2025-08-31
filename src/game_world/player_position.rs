@@ -15,7 +15,7 @@ pub struct PlayerChangedChunkCoordEvent {
 }
 
 pub fn check_for_player_chunk_position_update(
-    mut world_generation_state: ResMut<WorldGenerationState>,
+    world_generation_state: ResMut<WorldGenerationState>,
     player_last_chunk_coord: Res<PlayerLastChunkCoord>,
     log_interval: Res<LogIntervalTimer>,
     player: Query<&Transform, With<ThePlayer>>,

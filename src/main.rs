@@ -11,16 +11,13 @@ mod utils;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
-use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::prelude::*;
-use bevy::render::render_resource::ShaderImport::AssetPath;
 use bevy_rapier3d::prelude::*;
 
 use crate::chunk::ChunkPlugin;
 use crate::logging::LoggingPlugin;
 use crate::player::PlayerPlugin;
 use crate::screen::ScreenPlugin;
-use crate::settings::GameSettings;
 use crate::sun::SunPlugin;
 use crate::toml_asset::TomlAssetPlugin;
 pub use game_world::GameWorldPlugin;

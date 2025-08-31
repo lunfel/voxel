@@ -5,7 +5,6 @@ use crate::game_world::coord::ChunkCoord;
 use crate::game_world::player_position::{PlayerChangedChunkCoordEvent, PlayerLastChunkCoord};
 use crate::game_world::GameWorld;
 use crate::settings::{GameSettings, GameSettingsHandle};
-use bevy::asset::ErasedAssetLoader;
 use bevy::prelude::*;
 use bevy::tasks::futures_lite::future;
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};

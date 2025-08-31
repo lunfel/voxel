@@ -11,7 +11,6 @@ use serde_derive::Deserialize;
 use std::default::Default;
 use std::fs;
 use std::process::exit;
-use toml;
 
 #[derive(Debug, Deserialize, Asset, TypePath, Clone)]
 pub struct GameSettings {

@@ -1,7 +1,6 @@
 mod control;
 mod cursor;
 
-use crate::game_state::GameState;
 use crate::player::control::{player_look, player_move, InputState, MovementSettings};
 use crate::player::cursor::{
     cursor_grab, initial_grab_cursor, initial_grab_cursor_delayed, DelayedSystemTimer,

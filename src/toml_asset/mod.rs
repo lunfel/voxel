@@ -5,7 +5,6 @@ use crate::settings::{GameSettings, GameSettingsHandle};
 use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, LoadContext};
 use bevy::prelude::*;
-use bevy::utils::info;
 
 pub struct TomlAssetPlugin;
 

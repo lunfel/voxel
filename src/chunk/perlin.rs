@@ -1,4 +1,4 @@
-use crate::game_world::coord::{ChunkCoord, GlobalVoxelBlockCoord, LocalVoxelBlockCoord};
+use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord};
 use crate::settings::CHUNK_SIZE;
 use bevy::prelude::*;
 use std::ops::{Add, Div, Mul, Sub};

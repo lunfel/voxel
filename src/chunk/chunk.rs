@@ -5,9 +5,7 @@ use crate::settings::{CHUNK_HEIGHT, CHUNK_SIZE, MAX_OFFSET};
 use crate::utils::{VertexBuffer, UV};
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
-use bevy::utils::info;
 use bevy_rapier3d::math::Vect;
-use bevy_rapier3d::prelude::*;
 
 impl Default for VoxelChunk {
     fn default() -> Self {
