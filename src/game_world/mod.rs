@@ -2,6 +2,7 @@ pub mod coord;
 mod generation;
 mod player_position;
 
+use bevy::platform::collections::HashMap;
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::generation::{
     begin_generating_map_chunks, receive_generated_map_chunks,
@@ -11,7 +12,6 @@ use crate::game_world::player_position::{
     check_for_player_chunk_position_update, update_player_last_chunk_coord,
 };
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 
 pub use player_position::PlayerChangedChunkCoordEvent;
 pub use player_position::PlayerLastChunkCoord;

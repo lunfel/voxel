@@ -61,7 +61,7 @@ pub fn player_move(
     key_bindings: Res<KeyBindings>,
     mut query: Query<(&Transform, &mut KinematicCharacterController), With<ThePlayer>>,
 ) {
-    let window = primary_window.single();
+    let window = primary_window.single().expect("No primary window");
 
     for (transform, mut character_controller) in query.iter_mut() {
         let mut move_velocity = Vec3::ZERO;
@@ -87,7 +87,7 @@ pub fn player_look(
     motion: Res<Events<MouseMotion>>,
     mut query: Query<&mut Transform, With<ThePlayer>>,
 ) {
-    let window = primary_window.single();
+    let window = primary_window.single().expect("No primary window");
 
     for mut transform in query.iter_mut() {
         for ev in state.reader_motion.read(&motion) {

@@ -55,7 +55,7 @@ fn main() {
         // https://github.com/bevyengine/bevy/discussions/1289#discussioncomment-304058
         // https://github.com/bevyengine/bevy/issues/8846#issue-1757760152
         .add_plugins(LogDiagnosticsPlugin::default())
-        .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_plugins(FrameTimeDiagnosticsPlugin { max_history_length: 10, smoothing_factor: 0.2 })
         // .add_plugins(WireframePlugin)
         // .insert_resource(WireframeConfig {
         //     global: true, // Toggle this to false to disable globally
