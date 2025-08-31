@@ -22,7 +22,8 @@ fn toggle_fullscreen(
 ) {
     if let Ok((mut window, entity)) = window.single_mut() {
         if keys.just_pressed(key_bindings.toggle_fullscreen) {
-            window.mode = WindowMode::Fullscreen(MonitorSelection::Primary, VideoModeSelection::Current);
+            window.mode =
+                WindowMode::Fullscreen(MonitorSelection::Primary, VideoModeSelection::Current);
 
             let width = window.width();
             let height = window.height();
