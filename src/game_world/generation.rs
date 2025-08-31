@@ -1,6 +1,6 @@
 use crate::chunk::block::BlockMaterial;
-use crate::chunk::voxel_chunk::{spawn_chunk_from_data, ChunkData};
 use crate::chunk::procedural::generate_chunk;
+use crate::chunk::voxel_chunk::{spawn_chunk_from_data, ChunkData};
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::player_position::{PlayerChangedChunkCoordEvent, PlayerLastChunkCoord};
 use crate::game_world::GameWorld;

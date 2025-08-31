@@ -59,13 +59,7 @@ pub fn player_move(
     primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<MovementSettings>,
     key_bindings: Res<KeyBindings>,
-    mut query: Query<
-        (
-            &Transform,
-            &mut KinematicCharacterController,
-        ),
-        With<ThePlayer>,
-    >,
+    mut query: Query<(&Transform, &mut KinematicCharacterController), With<ThePlayer>>,
 ) {
     let window = primary_window.single();
 
