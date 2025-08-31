@@ -1,20 +1,20 @@
+use crate::chunk::block::{VoxelBlock, VoxelBlockType};
+use crate::chunk::chunk::{ChunkData, VoxelChunk};
+use crate::chunk::noise::Noise;
+use crate::chunk::perlin::{PerlinCoord, PerlinCoord3d};
+use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord};
 use crate::settings::{CoordSystemIntegerSize, GameSettings, CHUNK_HEIGHT, CHUNK_SIZE};
+use crate::utils::render_mesh;
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy_rapier3d::na::Point3;
 use bevy_rapier3d::prelude::Vect;
-use crate::chunk::block::{VoxelBlock, VoxelBlockType};
-use crate::chunk::chunk::{ChunkData, VoxelChunk};
-use crate::chunk::perlin::{PerlinCoord, PerlinCoord3d};
 use noise::{NoiseFn, Perlin, Simplex};
-use crate::chunk::noise::Noise;
-use crate::game_world::coord::{ChunkCoord, LocalVoxelBlockCoord};
-use crate::utils::render_mesh;
 
 pub fn generate_chunk(chunk_coord: &ChunkCoord, game_settings: &GameSettings) -> ChunkData {
     let chunk = generate_single_chunk(chunk_coord, game_settings);
 
-    let (indices, vertices) =  chunk.render_indices_and_vertices();
+    let (indices, vertices) = chunk.render_indices_and_vertices();
 
     // let mesh = Mesh3d(mesh_manager.add(render_mesh(&indices, &vertices)));
     let mesh = render_mesh(&indices, &vertices);
@@ -40,33 +40,35 @@ pub fn generate_chunk(chunk_coord: &ChunkCoord, game_settings: &GameSettings) ->
     //     }
     // }
 
-    let v: Vec<Vect> = vertices.iter().map(|(v, _, _)| Vec3::from_array(*v)).collect();
+    let v: Vec<Vect> = vertices
+        .iter()
+        .map(|(v, _, _)| Vec3::from_array(*v))
+        .collect();
     let i: Vec<[u32; 3]> = match indices {
         Indices::U16(_) => unimplemented!("Not used by the game"),
-        Indices::U32(indices) => {
-            indices.chunks(3)
-                .map(|chunk| {
-                    let mut vec: [u32; 3] = [0, 0, 0];
+        Indices::U32(indices) => indices
+            .chunks(3)
+            .map(|chunk| {
+                let mut vec: [u32; 3] = [0, 0, 0];
 
-                    vec[0..3].clone_from_slice(&chunk[0..3]);
+                vec[0..3].clone_from_slice(&chunk[0..3]);
 
-                    vec
-                })
-                .collect()
-        }
+                vec
+            })
+            .collect(),
     };
-
 
     ChunkData {
         mesh,
         vertex: v,
         indices: i,
-        chunk
+        chunk,
     }
 }
 
 pub fn generate_single_chunk<P>(coord: &P, game_settings: &GameSettings) -> VoxelChunk
-where P: Into<ChunkCoord> + Clone
+where
+    P: Into<ChunkCoord> + Clone,
 {
     let _span = info_span!("generate_single_chunk").entered();
 
@@ -91,16 +93,14 @@ where P: Into<ChunkCoord> + Clone
                 let height: CoordSystemIntegerSize = height_noise.get([
                     (block_coord.x as f64) + (chunk_coord.x as f64 * CHUNK_SIZE as f64),
                     (block_coord.y as f64),
-                    (block_coord.z as f64) + (chunk_coord.y as f64 * CHUNK_SIZE as f64)
+                    (block_coord.z as f64) + (chunk_coord.y as f64 * CHUNK_SIZE as f64),
                 ]) as CoordSystemIntegerSize;
 
-                let block_value = block_noise.get(
-                    [
-                        (block_coord.x as f64) + (chunk_coord.x as f64 * CHUNK_SIZE as f64),
-                        (block_coord.y as f64),
-                        (block_coord.z as f64) + (chunk_coord.y as f64 * CHUNK_SIZE as f64)
-                    ]
-                );
+                let block_value = block_noise.get([
+                    (block_coord.x as f64) + (chunk_coord.x as f64 * CHUNK_SIZE as f64),
+                    (block_coord.y as f64),
+                    (block_coord.z as f64) + (chunk_coord.y as f64 * CHUNK_SIZE as f64),
+                ]);
 
                 min_value = min_value.min(block_value);
                 max_value = max_value.max(block_value);

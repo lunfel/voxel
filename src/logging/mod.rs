@@ -4,9 +4,11 @@ pub struct LoggingPlugin;
 
 impl Plugin for LoggingPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .insert_resource(LogIntervalTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
-            .add_systems(Update, update_log_timer);
+        app.insert_resource(LogIntervalTimer(Timer::from_seconds(
+            1.0,
+            TimerMode::Repeating,
+        )))
+        .add_systems(Update, update_log_timer);
     }
 }
 

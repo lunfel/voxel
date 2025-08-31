@@ -9,7 +9,7 @@ pub struct Noise {
     pub frequency: f64,
     pub amplitude: f64,
     pub lacunarity: f64,
-    pub gain: f64
+    pub gain: f64,
 }
 
 impl Serialize for Noise {
@@ -31,7 +31,7 @@ impl Serialize for Noise {
 impl<'de> Deserialize<'de> for Noise {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: Deserializer<'de>
+        D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
         struct NoiseHelper {
@@ -64,7 +64,7 @@ impl Default for Noise {
             frequency: 120.0,
             amplitude: 40.0,
             lacunarity: 2.0,
-            gain: 0.5
+            gain: 0.5,
         }
     }
 }
@@ -74,8 +74,7 @@ impl NoiseFn<f64, 3> for Noise {
     fn get(&self, point: [f64; 3]) -> f64 {
         let offset = 0.1153;
 
-        let offset_point: [f64; 3] = point
-            .map(|x| x + offset);
+        let offset_point: [f64; 3] = point.map(|x| x + offset);
 
         let mut total_noise_value = 0.0;
 
@@ -86,7 +85,8 @@ impl NoiseFn<f64, 3> for Noise {
 
             let noise_value = self.noise.get(offset_point.map(|x| x / (octave_frequency)));
 
-            total_noise_value += ((noise_value + 1.0) / 2.0) * self.amplitude * self.gain.powi(i+1);
+            total_noise_value +=
+                ((noise_value + 1.0) / 2.0) * self.amplitude * self.gain.powi(i + 1);
         }
 
         total_noise_value

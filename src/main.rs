@@ -1,13 +1,13 @@
-mod player;
-mod game_world;
 mod chunk;
-mod settings;
-mod utils;
-mod screen;
+mod game_state;
+mod game_world;
 mod logging;
+mod player;
+mod screen;
+mod settings;
 mod sun;
 mod toml_asset;
-mod game_state;
+mod utils;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
@@ -16,7 +16,6 @@ use bevy::prelude::*;
 use bevy::render::render_resource::ShaderImport::AssetPath;
 use bevy_rapier3d::prelude::*;
 
-pub use game_world::GameWorldPlugin;
 use crate::chunk::ChunkPlugin;
 use crate::logging::LoggingPlugin;
 use crate::player::PlayerPlugin;
@@ -24,22 +23,24 @@ use crate::screen::ScreenPlugin;
 use crate::settings::GameSettings;
 use crate::sun::SunPlugin;
 use crate::toml_asset::TomlAssetPlugin;
+pub use game_world::GameWorldPlugin;
 
 fn main() {
     App::new()
         // .init_resource::<Settings>()
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugins(
-            DefaultPlugins.set(ImagePlugin {
-                default_sampler: ImageSamplerDescriptor {
-                    min_filter: ImageFilterMode::Nearest,
-                    ..default()
-                }
-            })
+            DefaultPlugins
+                .set(ImagePlugin {
+                    default_sampler: ImageSamplerDescriptor {
+                        min_filter: ImageFilterMode::Nearest,
+                        ..default()
+                    },
+                })
                 .set(AssetPlugin {
                     watch_for_changes_override: Some(true),
                     ..default()
-                })
+                }),
         )
         .insert_resource(ClearColor(Color::srgba(0.4, 0.7, 0.85, 1.0)))
         .add_plugins((
@@ -49,7 +50,7 @@ fn main() {
             PlayerPlugin,
             ChunkPlugin,
             ScreenPlugin,
-            SunPlugin
+            SunPlugin,
         ))
         // Debug plugins
         // This slows down the game by a lot

@@ -3,10 +3,15 @@ mod generation;
 mod player_position;
 
 use crate::game_world::coord::ChunkCoord;
+use crate::game_world::generation::{
+    begin_generating_map_chunks, receive_generated_map_chunks,
+    touch_chunks_around_player_at_interval, ChunkGenerationTaskMap, WorldGenerationState,
+};
+use crate::game_world::player_position::{
+    check_for_player_chunk_position_update, update_player_last_chunk_coord,
+};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use crate::game_world::generation::{begin_generating_map_chunks, receive_generated_map_chunks, touch_chunks_around_player_at_interval, ChunkGenerationTaskMap, WorldGenerationState};
-use crate::game_world::player_position::{check_for_player_chunk_position_update, update_player_last_chunk_coord};
 
 pub use player_position::PlayerChangedChunkCoordEvent;
 pub use player_position::PlayerLastChunkCoord;
@@ -24,13 +29,16 @@ impl Plugin for GameWorldPlugin {
             .init_resource::<ChunkGenerationTaskMap>()
             .init_resource::<GameWorld>()
             .add_event::<PlayerChangedChunkCoordEvent>()
-            .add_systems(Update, (
-                check_for_player_chunk_position_update,
-                update_player_last_chunk_coord,
-                begin_generating_map_chunks,
-                receive_generated_map_chunks,
-                touch_chunks_around_player_at_interval
-            ));
+            .add_systems(
+                Update,
+                (
+                    check_for_player_chunk_position_update,
+                    update_player_last_chunk_coord,
+                    begin_generating_map_chunks,
+                    receive_generated_map_chunks,
+                    touch_chunks_around_player_at_interval,
+                ),
+            );
     }
 }
 

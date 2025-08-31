@@ -1,21 +1,22 @@
+use crate::player::control::KeyBindings;
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
-use crate::player::control::KeyBindings;
 
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct DelayedSystemTimer(Timer);
 
-pub fn initial_grab_cursor(
-    mut commands: Commands
-) {
-    commands.insert_resource(DelayedSystemTimer(Timer::from_seconds(0.2, TimerMode::Once)));
+pub fn initial_grab_cursor(mut commands: Commands) {
+    commands.insert_resource(DelayedSystemTimer(Timer::from_seconds(
+        0.2,
+        TimerMode::Once,
+    )));
 }
 
 pub fn initial_grab_cursor_delayed(
     mut timer: ResMut<DelayedSystemTimer>,
     time: Res<Time>,
     mut has_run: Local<bool>,
-    mut primary_window: Query<&mut Window, With<PrimaryWindow>>
+    mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     if !*has_run {
         timer.tick(time.delta());

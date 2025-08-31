@@ -1,10 +1,10 @@
+use crate::player::ThePlayer;
 use bevy::ecs::event::EventCursor;
-use bevy::input::ButtonInput;
 use bevy::input::mouse::MouseMotion;
+use bevy::input::ButtonInput;
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy_rapier3d::control::{KinematicCharacterController, KinematicCharacterControllerOutput};
-use crate::player::ThePlayer;
 
 #[derive(Resource)]
 pub struct MovementSettings {
@@ -30,7 +30,7 @@ pub struct KeyBindings {
     pub move_left: KeyCode,
     pub move_right: KeyCode,
     pub move_downward: KeyCode,
-    pub move_upward: KeyCode
+    pub move_upward: KeyCode,
 }
 
 impl Default for KeyBindings {
@@ -43,7 +43,7 @@ impl Default for KeyBindings {
             move_left: KeyCode::KeyA,
             move_right: KeyCode::KeyD,
             move_downward: KeyCode::KeyC,
-            move_upward: KeyCode::Space
+            move_upward: KeyCode::Space,
         }
     }
 }
@@ -59,7 +59,14 @@ pub fn player_move(
     primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<MovementSettings>,
     key_bindings: Res<KeyBindings>,
-    mut query: Query<(&Transform, &mut KinematicCharacterController, &KinematicCharacterControllerOutput), With<ThePlayer>>,
+    mut query: Query<
+        (
+            &Transform,
+            &mut KinematicCharacterController,
+            &KinematicCharacterControllerOutput,
+        ),
+        With<ThePlayer>,
+    >,
 ) {
     let window = primary_window.single();
 

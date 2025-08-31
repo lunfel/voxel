@@ -1,9 +1,9 @@
-use bevy::prelude::*;
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::generation::WorldGenerationState;
 use crate::logging::LogIntervalTimer;
 use crate::player::ThePlayer;
 use crate::settings::{GameSettings, GameSettingsHandle};
+use bevy::prelude::*;
 
 #[derive(Resource, Deref, DerefMut, Debug, Clone, Default)]
 pub struct PlayerLastChunkCoord(ChunkCoord);
@@ -27,7 +27,7 @@ pub fn check_for_player_chunk_position_update(
         if player_chunk_coord != player_last_chunk_coord.0 {
             ev_changed_coord.send(PlayerChangedChunkCoordEvent {
                 new_position: player_chunk_coord,
-                previous_position: player_last_chunk_coord.0
+                previous_position: player_last_chunk_coord.0,
             });
         }
     }
@@ -39,7 +39,9 @@ pub fn update_player_last_chunk_coord(
     game_settings_assets: Res<Assets<GameSettings>>,
     game_handle_resource: Res<GameSettingsHandle>,
 ) {
-    let game_settings = game_settings_assets.get(&game_handle_resource.handle).expect("This should have been loaded, but was not");
+    let game_settings = game_settings_assets
+        .get(&game_handle_resource.handle)
+        .expect("This should have been loaded, but was not");
 
     if !game_settings.logs.change_chunk_enabled {
         return;

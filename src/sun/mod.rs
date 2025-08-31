@@ -12,9 +12,7 @@ impl Plugin for SunPlugin {
     }
 }
 
-fn setup(
-    mut commands: Commands
-) {
+fn setup(mut commands: Commands) {
     info!("Inserting light in the world");
     commands.insert_resource(AmbientLight {
         brightness: 225.0,
@@ -31,26 +29,29 @@ fn setup(
         CascadeShadowConfigBuilder {
             first_cascade_far_bound: 4.0,
             ..default()
-        }.build(),
+        }
+        .build(),
         Transform {
             translation: Vec3::new(0.0, 250.0, 0.0),
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
-        }
+        },
     ));
 }
 
 fn make_the_sun_move_around(
     time: Res<Time>,
-    mut query: Query<&mut Transform, With<DirectionalLight>>
+    mut query: Query<&mut Transform, With<DirectionalLight>>,
 ) {
     for mut transform in query.iter_mut() {
-        let trans = Transform::from_xyz(0.0, transform.translation.y, 0.0)
-            .looking_at(Vec3::new(
+        let trans = Transform::from_xyz(0.0, transform.translation.y, 0.0).looking_at(
+            Vec3::new(
                 (time.elapsed_secs() / 100.0).cos() * 100.0,
                 0.0,
                 (time.elapsed_secs() / 100.0).sin() * 100.0,
-            ), Vec3::Y);
+            ),
+            Vec3::Y,
+        );
 
         transform.translation = trans.translation;
         transform.rotation = trans.rotation;

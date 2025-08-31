@@ -1,11 +1,11 @@
+use crate::chunk::chunk::VoxelChunk;
+use crate::game_world::coord::ChunkCoord;
+use crate::game_world::GameWorld;
 use crate::settings::{GameSettings, GameSettingsHandle};
 use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, LoadContext};
 use bevy::prelude::*;
 use bevy::utils::info;
-use crate::chunk::chunk::VoxelChunk;
-use crate::game_world::coord::ChunkCoord;
-use crate::game_world::GameWorld;
 
 pub struct TomlAssetPlugin;
 
@@ -21,9 +21,7 @@ impl Plugin for TomlAssetPlugin {
 fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
     let handle: Handle<GameSettings> = asset_server.load("game.toml");
 
-    commands.insert_resource(GameSettingsHandle {
-        handle
-    });
+    commands.insert_resource(GameSettingsHandle { handle });
 }
 
 fn listen_to_settings_loaded(
@@ -33,29 +31,26 @@ fn listen_to_settings_loaded(
     mut game_world: ResMut<GameWorld>,
     mut commands: Commands,
     mut ev_changed_coord: EventWriter<crate::game_world::PlayerChangedChunkCoordEvent>,
-    player_last_chunk_coord: Res<crate::game_world::PlayerLastChunkCoord>
+    player_last_chunk_coord: Res<crate::game_world::PlayerLastChunkCoord>,
 ) {
     for ev in ev_asset.read() {
         info!("Processing asset event {:?}", ev);
         match ev {
-            AssetEvent::Added { id }|AssetEvent::Modified { id } => {
+            AssetEvent::Added { id } | AssetEvent::Modified { id } => {
                 if game_settings_handle.handle.id() == *id {
                     for entity in query.iter() {
-                        commands.entity(entity)
-                            .despawn();
+                        commands.entity(entity).despawn();
                     }
 
                     game_world.clear();
 
                     ev_changed_coord.send(crate::game_world::PlayerChangedChunkCoordEvent {
                         new_position: ChunkCoord(player_last_chunk_coord.0),
-                        previous_position: ChunkCoord(player_last_chunk_coord.0)
+                        previous_position: ChunkCoord(player_last_chunk_coord.0),
                     });
                 }
             }
-            _ => {
-
-            }
+            _ => {}
         }
     }
 }

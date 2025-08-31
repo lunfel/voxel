@@ -10,12 +10,12 @@ pub enum VoxelBlockType {
     Rock,
     Grass,
     Gem,
-    Dirt
+    Dirt,
 }
 
 #[derive(Default, Copy, Clone, Debug)]
 pub struct VoxelBlock {
-    pub block_type: VoxelBlockType
+    pub block_type: VoxelBlockType,
 }
 
 pub type BlockMaterialHashMap = HashMap<VoxelBlockType, Handle<StandardMaterial>>;
@@ -45,8 +45,14 @@ impl FromWorld for BlockMaterialMap {
 
         let mut material_map: BlockMaterialHashMap = HashMap::new();
 
-        material_map.insert(VoxelBlockType::Rock, materials.add(Color::srgba(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0, 1.0)));
-        material_map.insert(VoxelBlockType::Grass, materials.add(Color::srgba(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0, 1.0)));
+        material_map.insert(
+            VoxelBlockType::Rock,
+            materials.add(Color::srgba(79.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0, 1.0)),
+        );
+        material_map.insert(
+            VoxelBlockType::Grass,
+            materials.add(Color::srgba(76.0 / 255.0, 153.0 / 255.0, 0.0 / 255.0, 1.0)),
+        );
 
         Self(material_map)
     }
