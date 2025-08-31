@@ -1,0 +1,25 @@
+[world]
+# Number of chunks in each direction from the player
+world_dimension = 4
+# Number of chunks to preload (adds on top of world_dimension)
+preload_extra_distance = 1
+
+[logs]
+change_chunk_enabled = true
+update_as_we_move_enabled = true
+
+[procedural.base_noise]
+seed = 4
+octaves = 3
+frequency = 100
+amplitude = 80
+lacunarity = 2.1
+gain = 0.6
+
+[procedural.block_noise]
+seed = 1
+octaves = 3
+frequency = 20
+amplitude = 1
+lacunarity = 1.0
+gain = 0.5
