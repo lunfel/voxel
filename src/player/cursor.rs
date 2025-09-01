@@ -51,12 +51,15 @@ pub fn cursor_grab(
     // app_exit_events: ResMut<Events<AppExit>>,
     mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    if let Ok(mut window) = primary_window.single_mut() {
-        if keys.just_pressed(key_bindings.toggle_grab_cursor) {
-            toggle_grab_cursor(&mut window);
-            // app_exit_events.send(AppExit);
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if let Ok(mut window) = primary_window.single_mut() {
+            if keys.just_pressed(key_bindings.toggle_grab_cursor) {
+                toggle_grab_cursor(&mut window);
+                // app_exit_events.send(AppExit);
+            }
+        } else {
+            warn!("Primary window not found for `cursor_grab`");
         }
-    } else {
-        warn!("Primary window not found for `cursor_grab`");
     }
 }

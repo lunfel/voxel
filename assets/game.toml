@@ -5,8 +5,8 @@ world_dimension = 4
 preload_extra_distance = 1
 
 [logs]
-change_chunk_enabled = true
-update_as_we_move_enabled = true
+change_chunk_enabled = false
+update_as_we_move_enabled = false
 
 [procedural.base_noise]
 seed = 4

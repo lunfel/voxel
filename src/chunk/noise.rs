@@ -94,7 +94,11 @@ impl NoiseFn<f64, 3> for Noise {
 }
 
 impl Noise {
-    fn seed(&self) -> u32 {
+    pub fn seed(&self) -> u32 {
         self.noise.seed()
+    }
+
+    pub fn set_seed(&mut self, seed: u32) {
+        self.noise.set_seed(seed);
     }
 }
