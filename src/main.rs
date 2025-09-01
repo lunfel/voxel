@@ -13,16 +13,14 @@ use crate::chunk::ChunkPlugin;
 use crate::logging::LoggingPlugin;
 use crate::player::PlayerPlugin;
 use crate::screen::ScreenPlugin;
-use crate::settings::{GameSettingResource, NoiseConfigurationChangedEvent};
+use crate::settings::NoiseConfigurationChangedEvent;
 use crate::sun::SunPlugin;
 use crate::toml_asset::TomlAssetPlugin;
 use crate::web::setup_pointer_lock;
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 pub use game_world::GameWorldPlugin;
-use std::cell::RefCell;
 use std::sync::{LazyLock, Mutex};
 use wasm_bindgen::prelude::*;
 

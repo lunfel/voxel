@@ -1,6 +1,6 @@
 use crate::game_world::coord::ChunkCoord;
 use crate::player::ThePlayer;
-use crate::settings::{GameSettingResource, GameSettings, GameSettingsHandle};
+use crate::settings::GameSettingResource;
 use bevy::prelude::*;
 
 #[derive(Resource, Deref, DerefMut, Debug, Clone, Default)]

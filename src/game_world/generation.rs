@@ -4,7 +4,7 @@ use crate::chunk::voxel_chunk::{spawn_chunk_from_data, ChunkData};
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::player_position::{PlayerChangedChunkCoordEvent, PlayerLastChunkCoord};
 use crate::game_world::GameWorld;
-use crate::settings::{GameSettingResource, GameSettings, GameSettingsHandle};
+use crate::settings::GameSettingResource;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy::tasks::futures_lite::future;
