@@ -1,11 +1,13 @@
 use crate::chunk::voxel_chunk::VoxelChunk;
 use crate::game_world::coord::ChunkCoord;
 use crate::game_world::GameWorld;
-use crate::settings::{GameSettingResource, GameSettings, GameSettingsHandle, NoiseConfigurationChangedEvent};
+use crate::settings::{
+    GameSettingResource, GameSettings, GameSettingsHandle, NoiseConfigurationChangedEvent,
+};
+use crate::FORM_VALUE_QUEUE;
 use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, LoadContext};
 use bevy::prelude::*;
-use crate::FORM_VALUE_QUEUE;
 
 pub struct TomlAssetPlugin;
 
@@ -15,11 +17,14 @@ impl Plugin for TomlAssetPlugin {
             // .init_resource::<GameSettingResource>()
             .insert_resource(GameSettingResource::default())
             .add_systems(Startup, setup)
-            .add_systems(Update, (
-                listen_to_settings_loaded,
-                listen_to_noise_configuration_changed,
-                debug_resource
-            ))
+            .add_systems(
+                Update,
+                (
+                    listen_to_settings_loaded,
+                    listen_to_noise_configuration_changed,
+                    debug_resource,
+                ),
+            )
             .register_asset_loader(TomlAssetLoader);
     }
 }
@@ -57,8 +62,7 @@ fn listen_to_noise_configuration_changed(
 fn debug_resource(
     mut game_setting_resource: ResMut<GameSettingResource>,
     mut events: EventWriter<NoiseConfigurationChangedEvent>,
-)
-{
+) {
     let mut queue = FORM_VALUE_QUEUE.lock().expect("Failed to lock queue");
     for val in queue.drain(..) {
         let base_noise = &mut game_setting_resource.settings.procedural.base_noise;

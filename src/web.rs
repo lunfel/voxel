@@ -24,8 +24,8 @@ mod web_support {
 pub fn setup_pointer_lock() {
     #[cfg(target_arch = "wasm32")]
     {
-        use web_sys::HtmlCanvasElement;
         use wasm_bindgen::JsCast;
+        use web_sys::HtmlCanvasElement;
 
         let window = web_sys::window().unwrap();
         let document = window.document().unwrap();

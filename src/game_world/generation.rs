@@ -27,7 +27,7 @@ pub fn begin_generating_map_chunks(
     mut ev_changed_coord: EventReader<PlayerChangedChunkCoordEvent>,
     mut generation_tasks: ResMut<ChunkGenerationTaskMap>,
     game_world: Res<GameWorld>,
-    game_setting_resource: Res<GameSettingResource>
+    game_setting_resource: Res<GameSettingResource>,
 ) {
     if ev_changed_coord.is_empty() {
         return;
@@ -56,13 +56,16 @@ pub fn begin_generating_map_chunks(
                 if game_world.get(&chunk_coord).is_none() {
                     total += 1;
 
-                    if game_setting_resource.settings.logs.update_as_we_move_enabled {
+                    if game_setting_resource
+                        .settings
+                        .logs
+                        .update_as_we_move_enabled
+                    {
                         info!("{:?} has been updated", chunk_coord);
                     }
 
                     let gs = game_setting_resource.settings.clone();
-                    let task =
-                        task_pool.spawn(async move { generate_chunk(&chunk_coord, &gs) });
+                    let task = task_pool.spawn(async move { generate_chunk(&chunk_coord, &gs) });
 
                     generation_tasks.chunks.insert(chunk_coord, task);
                 };
@@ -70,7 +73,11 @@ pub fn begin_generating_map_chunks(
         }
     }
 
-    if game_setting_resource.settings.logs.update_as_we_move_enabled {
+    if game_setting_resource
+        .settings
+        .logs
+        .update_as_we_move_enabled
+    {
         info!("Generated {} chunks", total);
     }
 }
@@ -104,7 +111,7 @@ pub fn touch_chunks_around_player_at_interval(
     mut query: Query<(&ChunkCoord, &mut ChunkKeepAlive, &mut Visibility)>,
     player_last_chunk_coord: Res<PlayerLastChunkCoord>,
     time: Res<Time>,
-    game_setting_resource: Res<GameSettingResource>
+    game_setting_resource: Res<GameSettingResource>,
 ) {
     let mut total = 0;
 
@@ -130,7 +137,12 @@ pub fn touch_chunks_around_player_at_interval(
         }
     }
 
-    if total > 0 && game_setting_resource.settings.logs.update_as_we_move_enabled {
+    if total > 0
+        && game_setting_resource
+            .settings
+            .logs
+            .update_as_we_move_enabled
+    {
         info!("Touch chunks {} times", total);
     }
 }

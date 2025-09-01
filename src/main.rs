@@ -9,22 +9,22 @@ mod toml_asset;
 mod utils;
 mod web;
 
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
-use wasm_bindgen::prelude::*;
 use crate::chunk::ChunkPlugin;
 use crate::logging::LoggingPlugin;
 use crate::player::PlayerPlugin;
 use crate::screen::ScreenPlugin;
+use crate::settings::{GameSettingResource, NoiseConfigurationChangedEvent};
 use crate::sun::SunPlugin;
 use crate::toml_asset::TomlAssetPlugin;
-pub use game_world::GameWorldPlugin;
-use crate::settings::{GameSettingResource, NoiseConfigurationChangedEvent};
 use crate::web::setup_pointer_lock;
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
+use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
+pub use game_world::GameWorldPlugin;
 use std::cell::RefCell;
 use std::sync::{LazyLock, Mutex};
+use wasm_bindgen::prelude::*;
 
 static FORM_VALUE_QUEUE: LazyLock<Mutex<Vec<FormValue>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
@@ -46,14 +46,17 @@ pub fn set_form_value(
     lacunarity: f64,
     gain: f64,
 ) {
-    FORM_VALUE_QUEUE.lock().expect("Could not get lock on form value queue").push(FormValue {
-        seed,
-        octaves,
-        frequency,
-        amplitude,
-        lacunarity,
-        gain,
-    });
+    FORM_VALUE_QUEUE
+        .lock()
+        .expect("Could not get lock on form value queue")
+        .push(FormValue {
+            seed,
+            octaves,
+            frequency,
+            amplitude,
+            lacunarity,
+            gain,
+        });
 }
 
 fn main() {

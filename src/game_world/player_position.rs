@@ -33,7 +33,7 @@ pub fn check_for_player_chunk_position_update(
 pub fn update_player_last_chunk_coord(
     mut player_last_chunk_coord: ResMut<PlayerLastChunkCoord>,
     mut ev_changed_coord: EventReader<PlayerChangedChunkCoordEvent>,
-    game_setting_resource: Res<GameSettingResource>
+    game_setting_resource: Res<GameSettingResource>,
 ) {
     if !game_setting_resource.settings.logs.change_chunk_enabled {
         return;
