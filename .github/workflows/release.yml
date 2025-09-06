@@ -41,8 +41,7 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
+            ~/.cargo/registry/
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.toml') }}
@@ -73,4 +72,5 @@ jobs:
       - name: Upload binaries
         uses: softprops/action-gh-release@v1
         with:
+          # TODO: change path
           files: build/*
