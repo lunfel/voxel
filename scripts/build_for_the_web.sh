@@ -7,4 +7,4 @@ wasm-bindgen --no-typescript --target web \
     --out-dir ../voxel-for-the-web/ \
     --out-name "voxel" \
     ./target/wasm32-unknown-unknown/release/voxel.wasm
-cp -a assets ../voxel-for-the-web/
+cp -a assets web/assets
