@@ -1,6 +1,6 @@
 use crate::game_world::coord::ChunkCoord;
 use crate::player::ThePlayer;
-use crate::settings::{GameSettings, GameSettingsHandle};
+use crate::settings::GameSettingResource;
 use bevy::prelude::*;
 
 #[derive(Resource, Deref, DerefMut, Debug, Clone, Default)]
@@ -33,14 +33,9 @@ pub fn check_for_player_chunk_position_update(
 pub fn update_player_last_chunk_coord(
     mut player_last_chunk_coord: ResMut<PlayerLastChunkCoord>,
     mut ev_changed_coord: EventReader<PlayerChangedChunkCoordEvent>,
-    game_settings_assets: Res<Assets<GameSettings>>,
-    game_handle_resource: Res<GameSettingsHandle>,
+    game_setting_resource: Res<GameSettingResource>,
 ) {
-    let game_settings = game_settings_assets
-        .get(&game_handle_resource.handle)
-        .expect("This should have been loaded, but was not");
-
-    if !game_settings.logs.change_chunk_enabled {
+    if !game_setting_resource.settings.logs.change_chunk_enabled {
         return;
     }
 

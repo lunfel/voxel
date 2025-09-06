@@ -10,7 +10,10 @@ use bevy::prelude::*;
 use serde_derive::Deserialize;
 use std::default::Default;
 
-#[derive(Debug, Deserialize, Asset, TypePath, Clone)]
+#[derive(Debug, Default, Deserialize, Clone, Event)]
+pub struct NoiseConfigurationChangedEvent;
+
+#[derive(Debug, Default, Deserialize, Asset, TypePath, Clone)]
 pub struct GameSettings {
     pub world: World,
     pub logs: Logs,
@@ -22,10 +25,24 @@ pub struct GameSettingsHandle {
     pub handle: Handle<GameSettings>,
 }
 
-#[derive(Debug, Deserialize, Default, Clone)]
+#[derive(Debug, Resource, Default, Clone)]
+pub struct GameSettingResource {
+    pub settings: GameSettings,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct World {
     pub world_dimension: i32,
     pub preload_extra_distance: i32,
+}
+
+impl Default for World {
+    fn default() -> Self {
+        Self {
+            world_dimension: 4,
+            preload_extra_distance: 1,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Default, Clone)]
