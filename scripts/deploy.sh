@@ -25,5 +25,5 @@ curl -s -L -O --output-dir releases/$TAG_NAME "$JS_URL"
 echo "$RESPONSE" > releases/$TAG_NAME/latest.json
 
 echo "Pushing to web server..."
-rsync -av releases/$TAG_NAME/assets releases/$TAG_NAME/$WASM_NAME releases/$TAG_NAME/$JS_NAME releases/$TAG_NAME/latest.json web/index.html voxel:/var/www/voxel/
+rsync -av releases/$TAG_NAME/assets releases/$TAG_NAME/$WASM_NAME releases/$TAG_NAME/$JS_NAME releases/$TAG_NAME/latest.json releases/$TAG_NAME/web/index.html voxel:/var/www/voxel/
 echo "Done!"

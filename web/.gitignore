@@ -1,3 +1,4 @@
 assets
 voxel.js
 *.wasm
+latest.json

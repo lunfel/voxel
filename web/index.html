@@ -48,7 +48,11 @@
 
       const voxel_module = await import("./voxel.js");
 
-      const init = await voxel_module.default();
+      voxel_module.default().catch((error) => {
+        if (!error.message.startsWith("Using exceptions for control flow, don't mind me. This isn't actually an error!")) {
+          throw error;
+        }
+      });
       const set_form_value = voxel_module.set_form_value;
 
       saveBtn.addEventListener('click', function (event) {
@@ -65,22 +69,13 @@
 
         modal.classList.remove('is-active')
       });
-
-      init("./voxel_bg.wasm").catch((error) => {
-        if (!error.message.startsWith("Using exceptions for control flow, don't mind me. This isn't actually an error!")) {
-          throw error;
-        }
-      })
     });
 
-    gameVersionSpan.innerText = data.tag_name;
-
-    console.log('gamejs', gameJs);
-    console.log('gameWasm', gameWasm);
-
-    const wasmSizeMB = (gameWasm.size / 1024 / 1024).toFixed(0);
-
-    startGameBtn.innerText = `Start Game (${wasmSizeMB}MB)`
+    fetch('latest.json')
+      .then(response => response.json())
+      .then(data => {
+        gameVersionSpan.innerText = data.tag_name;
+      });
   }, false);
 </script>
 
@@ -212,7 +207,7 @@
 
       <div class="block">
         <p>Game Version <span id="game-version">??</span></p>
-        <a href="https://github.com/lunfel/voxel">Source</a>
+        <a href="https://github.com/lunfel/voxel" target="_blank">Source</a>
       </div>
     </section>
   </div>
